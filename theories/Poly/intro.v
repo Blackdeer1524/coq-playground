@@ -461,5 +461,34 @@ Module Exercises.
     Proof.
       reflexivity.
     Qed.
+
+    Definition plus (n m : cnat) : cnat := fun (X : Type) f x => n X f (m X f x).
+
+    Example churc_1_plus_1 : plus one one = two.
+    Proof.
+      reflexivity.
+    Qed.
+
+    Example churc_1_plus_0 : plus one zero = one.
+    Proof.
+      reflexivity.
+    Qed.
+
+    Definition mult (n m : cnat) : cnat := fun (X : Type) f x => n X (m X f) x.
+
+    Example mult_1 : mult one one = one.
+    Proof.
+      reflexivity.
+    Qed.
+
+    Example mult_2 : mult zero (plus two two) = zero.
+    Proof.
+      reflexivity.
+    Qed.
+
+    Example mult_3 : mult two two = plus two two.
+    Proof.
+      reflexivity.
+    Qed.
   End Church.
 End Exercises.

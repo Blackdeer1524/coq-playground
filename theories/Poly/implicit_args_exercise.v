@@ -200,7 +200,7 @@ Proof.
   reflexivity.
 Qed.
 
-Fixpoint filter ( X : Type ) (test : X -> bool) (l : list X) : list X :=
+Fixpoint filter (X : Type) (test : X -> bool) (l : list X) : list X :=
   match l with
   | [ ] => [ ]
   | h :: t =>
@@ -212,7 +212,8 @@ Fixpoint filter ( X : Type ) (test : X -> bool) (l : list X) : list X :=
 Compute (filter nat (fun n => Nat.even n) [1; 2; 3; 4]).
 
 Definition filter_even_gt7 (l : list nat) : list nat :=
-  filter nat 
+  filter
+    nat
     (fun n =>
        if Nat.even n
          then 7 <? n
@@ -233,7 +234,8 @@ Qed.
 Definition partition {X : Type} (test : X -> bool) (l : list X)
   : list X * list X :=
   (filter X test l,
-  filter X
+  filter
+    X
     (fun x =>
        if test x
          then false
@@ -252,7 +254,7 @@ Proof.
   reflexivity.
 Qed.
 
-Fixpoint map ( X Y : Type ) (f : X -> Y) (l : list X) : list Y :=
+Fixpoint map (X Y : Type) (f : X -> Y) (l : list X) : list Y :=
   match l with
   | [ ] => [ ]
   | h :: t => f h :: map X Y f t
@@ -271,7 +273,8 @@ Proof.
 Qed.
 
 Theorem map_rev :
-  forall (X Y : Type) (f : X -> Y) (l : list X), map X Y f (rev l) = rev (map X Y f l).
+  forall (X Y : Type) (f : X -> Y) (l : list X),
+    map X Y f (rev l) = rev (map X Y f l).
 Proof.
   intros.
   induction l.
@@ -287,7 +290,7 @@ Fixpoint flat_map {X Y : Type} (f : X -> list Y) (l : list X) : list Y :=
   match l with
   | nil => nil
   | h :: t => f h ++ flat_map f t
-  end.                   
+  end.
 
 Example test_flat_map1 :
   flat_map (fun n => [n; n; n]) [1; 5; 4] = [1; 1; 1; 5; 5; 5; 4; 4; 4].
