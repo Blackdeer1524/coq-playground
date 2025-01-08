@@ -80,7 +80,7 @@ Proof.
     * simpl.
       rewrite -> IHl.
       reflexivity.
-Qed.
+  Qed.
 
 Theorem app_assoc : forall A (l m n : list A), l ++ m ++ n = (l ++ m) ++ n.
 Proof.
@@ -490,5 +490,42 @@ Module Exercises.
     Proof.
       reflexivity.
     Qed.
+
+    Definition what (X : Type) (m : cnat) (x : X) : list X :=
+      match m
+        (list X)
+        (fun xs =>
+           match xs with
+           | nil => nil
+           | h :: t => h :: h :: t
+           end)
+        [x] with
+      | nil => nil
+      | h :: t => t
+      end.
+
+    Definition exp (n m : cnat) : cnat :=
+      fun (X : Type) f x => m (X -> X) (fun f' => n X f') f x.
+    
+    Example exp_1: exp one one = one.
+    Proof.
+      reflexivity.
+    Qed.
+    
+    Example exp_2: exp zero one = zero.
+    Proof.
+      reflexivity.
+    Qed.
+    
+    Example exp_3: exp one two = one.
+    Proof.
+      reflexivity.
+    Qed.
+
+    Example exp_4: exp two one = two.
+    Proof.
+      reflexivity.
+    Qed.
+      
   End Church.
 End Exercises.
