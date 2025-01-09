@@ -471,7 +471,6 @@ Module NatList.
         reflexivity.
   Qed.
 
-  Search rev.
 
   Lemma app_empty_does_nothing : forall (l : natlist), l ++ [ ] = l.
   Proof.
@@ -756,4 +755,7 @@ Module PartialMap.
     rewrite -> H.
     reflexivity.
   Qed.
+  
+  Search rev.
 End PartialMap.
+
