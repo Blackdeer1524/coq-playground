@@ -335,7 +335,7 @@ Fixpoint split {X Y : Type} (l : list (X * Y)) : list X * list Y :=
 
 Search hd.
 
-Lemma uncurry_id :
+Lemma uncurried_combine :
   forall (X Y : Type) (l1 : list X) (l2 : list Y),
     combine l1 l2 = (uncurry (combine (B := Y))) (l1, l2).
 Proof.
@@ -396,7 +396,7 @@ Proof.
     * intros l1 l2.
       destruct p.
       intro H.
-      rewrite -> uncurry_id.
+      rewrite -> uncurried_combine.
       rewrite <- H.
       rewrite -> combine_is_split_inv.
       reflexivity.
@@ -497,18 +497,180 @@ Qed.
 
 Definition split_combine_statement : Prop :=
   forall (X Y : Type) (l : list (X * Y)) l1 l2,
-    (l1,l2) = split l -> combine l1 l2 = l.
+    l = combine l1 l2 -> length l1 = length l2 -> split l = (l1, l2).
+
+Lemma len_of_combine_of_same_len_lists :
+  forall (X Y : Type) (l1 : list X) (l2 : list Y),
+    length l1 = length l2 -> length (combine l1 l2) = length l1.
+Proof.
+  intros X Y l1.
+  induction l1.
+    * intros.
+      reflexivity.
+    * destruct l2 eqn:L2.
+        - intro H.
+          simpl.
+          discriminate.
+        - intro H.
+          simpl in H.
+          injection H.
+          intro Q.
+          apply IHl1 in Q.
+          simpl.
+          rewrite -> Q.
+          reflexivity.
+Qed.
+
+Lemma bar :
+  forall
+    (X Y : Type)
+    x
+    y
+    (l1 : list X)
+    (l2 : list Y)
+    (l3 : list X)
+    (l4 : list Y),
+    (l1,l2) = (l3,l4) -> (x :: l1, y :: l2) = (x :: l3, y :: l4).
+Proof.
+  intros.
+  injection H.
+  intros.
+  rewrite H0.
+  rewrite H1.
+  reflexivity.
+Qed.
+
+Lemma zero_length_means_nil: forall (X : Type) (l : list X), length l = 0 -> l = [].
+Proof.
+  intros.
+  destruct l.
+  * reflexivity.
+  * simpl in H.
+    discriminate H.
+Qed.
+
 
 Theorem split_combine : split_combine_statement.
 Proof.
-  intro.
-  intros.
-  rewrite H.
-  unfold combine.
+  intros X Y l.
+  induction l as [ | h l' IHl'].
+    * intros l1 l2 CombineRes H.
+      apply len_of_combine_of_same_len_lists in H as CombineLen.
+      simpl.
+      rewrite <- CombineRes in CombineLen.
+      simpl in CombineLen.
+      rewrite <- CombineLen in H.
+      symmetry in H.
+      apply zero_length_means_nil in H.
+      symmetry in CombineLen.
+      apply zero_length_means_nil in CombineLen.
+      rewrite H.
+      rewrite CombineLen.
+      reflexivity.
+    * destruct h.
+      intros l3 l4.
+      rewrite -> split_distr.
+      destruct (split l') as [l1 l2] eqn:SplitL.
+      destruct l3 as [|hl3 l3'] eqn:L3, l4 as [|hl4 l4'] eqn:L4.
+      - simpl.
+        intros.
+        discriminate H.
+      - simpl.
+        intros.
+        discriminate H.
+      - simpl.
+        intros.
+        discriminate H.
+      - simpl.
+        intros.
+        injection H.
+        intros.
+        rewrite <- H2.
+        rewrite <- H3.
+        simpl.
+        apply bar.
+        apply IHl'.
+        apply H1.
+        injection H0.
+        intro.
+        apply H4.
+Qed.
+
+Theorem filter_exercise : forall (X : Type) (test : X -> bool)
+                                 (x : X) (l lf : list X),
+  filter test l = x :: lf ->
+  test x = true.
+Proof.       
+  intros X test x l.
+  generalize dependent x.
+  induction l as [|h l' IHl'].
+  * intros.
+    simpl in H.
+    discriminate H.
+  * intros.
+    unfold filter in H.
+    destruct (test h) eqn:TestH.
+    - injection H.
+      intros.
+      rewrite <- H1.
+      apply TestH.
+    - fold filter in H.
+      apply IHl' in H.
+      apply H.
+Qed.
 
 
-
-
-
+Fixpoint forallb { X : Type } (f : X -> bool) (l : list X) : bool := 
+  match l with 
+  | h :: t => if f h then forallb f t else false
+  | nil => true
+  end.
   
+Example forall_1: forallb Nat.odd [1;3;5;7;9] = true.
+Proof.
+  reflexivity.
+Qed.
+        
+Example forall_2: forallb negb [false;false] = true. 
+Proof. reflexivity. Qed.
 
+Example forall_3: forallb Nat.even [0;2;4;5] = false.
+Proof. reflexivity. Qed.
+
+Example forall_4: forallb (Nat.eqb 5) [] = true. 
+Proof. reflexivity. Qed.
+
+Fixpoint existsb { X : Type } (f : X -> bool) (l : list X) : bool := 
+  match l with 
+  | h :: t => if f h then true else existsb f t
+  | nil => false
+  end.
+
+Example existsb_1: existsb (Nat.eqb 5) [0;2;3;6] = false. Proof. reflexivity. Qed.
+Example existsb_2:existsb (andb true) [true;true;false] = true. Proof. reflexivity. Qed.
+Example existsb_3:existsb Nat.odd [1;0;0;0;0;3] = true. Proof. reflexivity. Qed.
+Example existsb_4:existsb Nat.even [] = false. Proof. reflexivity. Qed.
+
+Definition existsb' { X : Type } (f : X -> bool) (l : list X) : bool := 
+  negb (forallb (fun b => negb (f b)) l).
+
+Example existsb'_1: existsb' (Nat.eqb 5) [0;2;3;6] = false. Proof. reflexivity. Qed.
+Example existsb'_2: existsb' (andb true) [true;true;false] = true. Proof. reflexivity. Qed.
+Example existsb'_3: existsb' Nat.odd [1;0;0;0;0;3] = true. Proof. reflexivity. Qed.
+Example existsb'_4: existsb' Nat.even [] = false. Proof. reflexivity. Qed.
+
+Theorem existsb_existsb' : forall (X : Type) (test : X -> bool) (l : list X),
+  existsb test l = existsb' test l.
+Proof.
+  intros X test.
+  induction l as [|h l' IHl'].
+  * reflexivity.
+  * unfold existsb.
+    unfold existsb'.
+    unfold forallb.
+    destruct (test h) eqn:TestH.
+    + reflexivity.
+    + simpl.
+      apply IHl'.
+Qed.
+    
