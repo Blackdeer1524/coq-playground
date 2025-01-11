@@ -885,3 +885,204 @@ Proof.
       rewrite double_S_n.
       reflexivity.
 Qed.
+
+Theorem even_bool_prop : forall n,
+  Nat.even n = true <-> Even n.
+  intros.
+  split.
+  * intro H.
+    assert (Q: exists k : nat,
+          (n = (if Nat.even n then Nat.double k
+                else S (Nat.double k)))). {
+      apply even_double_conv with (n:=n).
+    }
+    destruct Q.
+    rewrite H in H0.
+    unfold Even.
+    exists x.
+    apply H0.
+  * unfold Even.
+    intros.
+    destruct H.
+    rewrite H.
+    apply even_double_n.
+Qed.
+
+
+Theorem eqb_eq : forall n1 n2 : nat,
+  n1 =? n2 = true <-> n1 = n2.
+Proof.
+  intros n1 n2. split.
+  - apply Nat.eqb_eq.
+  - intros H. rewrite H. rewrite Nat.eqb_refl. reflexivity.
+Qed.
+
+Theorem andb_true_iff : forall b1 b2:bool,
+  andb b1 b2 = true <-> b1 = true /\ b2 = true.
+Proof.
+  intros.
+  split.
+  - intro.
+    split.
+    * destruct b1,b2.
+      + reflexivity.
+      + reflexivity.
+      + simpl in H.
+        discriminate H.
+      + simpl in H.
+        discriminate H.
+    * destruct b1,b2.
+      + reflexivity.
+      + simpl in H.
+      discriminate H.
+      + reflexivity.
+      + simpl in H.
+        discriminate H.
+  - intro H.
+    destruct H as [HL HR].
+    * rewrite HL, HR.
+      reflexivity.
+Qed.
+
+
+ Theorem orb_true_iff : forall b1 b2,
+  orb b1 b2 = true <-> b1 = true \/ b2 = true.
+Proof.
+  intros.
+  split.
+  * intro H.
+    destruct b1,b2.
+    - left. reflexivity.
+    - left. reflexivity.
+    - right. reflexivity.
+    - simpl in H. discriminate H.
+  * intros [HL | HR].
+    - rewrite HL.
+      reflexivity.
+    - destruct b1.
+      + reflexivity.
+      + rewrite HR.
+        reflexivity.
+Qed.
+
+Theorem eqb_neq : forall x y : nat,
+  x =? y = false <-> x <> y.
+Proof.
+  intros.
+  split.
+  * intro.
+    unfold not.
+    intro.
+    rewrite H0 in H.
+    apply Nat.eqb_eq in H0 as E.
+    rewrite H0 in E.
+    rewrite E in H.
+    discriminate H.
+  * intros.
+    unfold not in H.
+    apply not_true_iff_false.
+    unfold not.
+    intro.
+    destruct H.
+    apply eqb_eq in H0.
+    apply H0.
+Qed.
+
+Fixpoint eqb_list {A : Type} (eqb : A -> A -> bool)
+                  (l1 l2 : list A) : bool :=
+  match (l1,l2) with
+  | ([],[]) => true
+  | (_,[]) => false
+  | ([],_) => false
+  | (h :: t, h' :: t') => if eqb h h' then eqb_list eqb t t' else false
+  end.
+
+Lemma foo: forall (X : Type) (a : X) l1 l2, l1 = l2 -> a :: l1 = a :: l2.
+Proof.
+  intros.
+  generalize dependent l2.
+  destruct l1.
+  * intros.
+    rewrite H.
+    reflexivity.
+  * intros.
+    rewrite H.
+    reflexivity.
+Qed.
+
+Theorem eqb_list_true_iff :
+  forall A (eqb : A -> A -> bool),
+    (forall a1 a2, eqb a1 a2 = true <-> a1 = a2) ->
+    forall l1 l2, eqb_list eqb l1 l2 = true <-> l1 = l2.
+Proof.
+  intros.
+  generalize dependent l2.
+  induction l1 as [|h' l1' IHl1'].
+  * intros.
+    split.
+    - intro.
+      simpl in H0.
+      destruct l2.
+      + reflexivity.
+      + discriminate H0.
+    - intro.
+      rewrite <- H0.
+      reflexivity.
+  * intro.
+    simpl.
+    destruct l2 eqn:L2.
+    - split.
+      + intro. discriminate H0.
+      + intro. discriminate H0.
+    - split.
+      + intro.
+        destruct (eqb h' a) eqn:R in H0.
+        **apply H in R as P.
+          rewrite P.
+            apply foo.
+            apply IHl1'.
+            apply H0.
+        **discriminate H0.
+      + intros.
+        injection H0.
+        intros.
+        destruct (eqb h' a) eqn:R.
+        **apply IHl1'.
+          apply H1.
+        **apply H in H2.
+          rewrite H2 in R.
+          discriminate R.
+Qed.
+
+Fixpoint forallb { X : Type } (f : X -> bool) (l : list X) : bool := 
+  match l with 
+  | h :: t => if f h then forallb f t else false
+  | nil => true
+  end.
+
+Theorem forallb_true_iff : forall X test (l : list X),
+  forallb test l = true <-> All (fun x => test x = true) l.
+Proof.
+  intros.
+  induction l as [|h' l' IHl'].
+  * simpl. 
+    split.
+    - intro. apply I.
+    - intro. reflexivity.
+  * simpl.
+    split.
+    - intro.
+      split.
+      + destruct (test0 h') eqn:P.
+        **reflexivity.
+        **discriminate H.
+      + destruct (test0 h') eqn:P.
+        **apply IHl' in H. apply H.
+        **discriminate H.
+    - intros [HL HR].
+      rewrite HL.
+      apply IHl' in HR.
+      apply HR.
+Qed.
+
+
