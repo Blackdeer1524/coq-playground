@@ -1085,4 +1085,115 @@ Proof.
       apply HR.
 Qed.
 
+Axiom functional_extensionality : forall {X Y: Type}
+                                    {f g : X -> Y},
+  (forall (x:X), f x = g x) -> f = g.
 
+ Example function_equality_ex2 :
+  (fun x => plus x 1) = (fun x => plus 1 x).
+Proof.
+  apply functional_extensionality. 
+  intros x.
+  apply Nat.add_comm.
+Qed.
+
+Print Assumptions function_equality_ex2.
+
+Fixpoint rev_append {X} (l1 l2 : list X) : list X :=
+  match l1 with
+  | [] => l2
+  | x :: l1' => rev_append l1' (x :: l2)
+  end.
+
+Definition tr_rev {X} (l : list X) : list X :=
+  rev_append l [].
+  
+Lemma rev_append_app_cons: 
+  forall (X : Type) l l1 l2 (a: X), 
+    (rev_append l l1) ++ (a :: l2) = (rev_append (l) (l1 ++ [a])) ++ l2.
+Proof.
+  intros X l.
+  induction l.
+  * intros. 
+    simpl.
+    rewrite <- List.app_assoc.
+    reflexivity.
+  * intros.
+    simpl.
+    specialize IHl with (a::l1) (l2) (a0).
+    rewrite IHl.
+    simpl.
+    reflexivity.
+Qed.
+
+Lemma rev_append_cons: forall (X : Type) l l1 l2 (a: X), 
+  l = rev_append (a :: l1) l2 -> l = (rev_append l1 []) ++ [a] ++ l2.
+Proof.
+  intros X l l1.
+  induction l1 as [| h' l1' IHl1'].
+  * simpl.
+    intros.
+    apply H.
+  * intros.
+    simpl.
+    simpl in IHl1'.
+    simpl in H.
+    apply IHl1' in H as E.
+    rewrite (rev_append_app_cons _ l1' ) in E.
+    simpl in E.
+    apply E.
+Qed.
+
+Lemma asdfaf: forall (X : Type) l1 l2 (a: X), 
+  rev_append l1 (l2 ++ [a]) = (rev_append l1 l2) ++ [a].
+Proof.
+  intros X l1.
+  induction l1.
+  * intros. reflexivity.
+  * intros.
+    simpl.
+    assert (Q: a::(l2 ++ [a0]) = ((a :: l2) ++ [a0])). {
+      simpl.
+      reflexivity.
+    }
+    rewrite Q.
+    apply IHl1.
+Qed.
+
+Lemma tr_rev_cons : 
+  forall (X: Type) (x : X) (l : list X), 
+    tr_rev (x :: l) = (tr_rev l) ++ [x].
+Proof.
+  intros.
+  generalize dependent x.
+  induction l.
+  * intro. reflexivity.
+  * intro.
+    unfold tr_rev.
+    unfold rev_append.
+
+    unfold tr_rev in IHl.
+    unfold rev_append in IHl.
+    specialize IHl with a.
+    rewrite IHl.
+
+    fold (@rev_append X) in IHl.
+    fold (@rev_append X).
+    rewrite <- IHl.
+    replace ([a;x]) with ([a] ++ [x]).
+    - rewrite (asdfaf X l [a] x).
+      reflexivity.
+    - reflexivity.
+Qed.
+
+Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
+Proof.
+  intro.
+  apply functional_extensionality.
+  induction x.
+  * reflexivity.
+  * simpl.
+    rewrite tr_rev_cons.
+    rewrite IHx.
+    reflexivity.
+Qed.
