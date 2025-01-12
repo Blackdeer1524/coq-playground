@@ -1197,3 +1197,134 @@ Proof.
     rewrite IHx.
     reflexivity.
 Qed.
+
+Theorem excluded_middle_irrefutable: forall (P : Prop),
+  ~ ~ (P \/ ~ P).
+Proof.
+  intro P.
+  unfold not.
+  intro.
+  apply de_morgan_not_or in H.
+  unfold not in H.
+  destruct H as [HL HR].
+  destruct HR.
+  apply HL.
+Qed.
+
+Definition excluded_middle := forall P : Prop,
+  P \/ ~ P.
+
+Theorem not_exists_dist :
+  excluded_middle ->
+    forall (X:Type) (P : X -> Prop),
+      ~ (exists x, ~ P x) -> (forall x, P x).
+Proof.
+  unfold excluded_middle.
+  intros ExcludedMiddle X P.
+  intros NotExists x.
+  unfold not in NotExists.
+  specialize ExcludedMiddle with (P x).
+  destruct ExcludedMiddle as [HL | HR].
+  * apply HL.
+  * unfold not in HR.
+    destruct NotExists.
+    exists x.
+    apply HR.
+Qed.
+
+Definition peirce := forall P Q: Prop,
+  ((P -> Q) -> P) -> P.
+
+Theorem LEM_impl_peirce: excluded_middle -> peirce.
+Proof.
+  unfold excluded_middle, peirce.
+  intros LEM P Q H.
+  specialize LEM with P as R.
+  destruct R.
+  * apply H0.
+  * apply H.
+    intro.
+    unfold not in H0.
+    destruct H0.
+    apply H1.
+Qed.
+
+Definition double_negation_elimination := forall P:Prop,
+  ~~P -> P.
+
+Theorem LEM_impl_double_neg: excluded_middle -> double_negation_elimination.
+Proof.
+  unfold excluded_middle, double_negation_elimination.
+  unfold not.
+  intros.
+  specialize H with P as Q.
+  destruct Q.
+  * apply H1.
+  * apply H0 in H1.
+    destruct H1.
+Qed.
+  
+Definition de_morgan_not_and_not := forall P Q:Prop,
+  ~(~P /\ ~Q) -> P \/ Q.
+
+Theorem excluded_middle_implies_de_morgan_not_and_not: excluded_middle -> de_morgan_not_and_not.
+Proof.
+  unfold excluded_middle, de_morgan_not_and_not.
+  intros LEM P Q H.
+  specialize LEM with P as E.
+  specialize LEM with Q as R.
+  destruct E as [HP | HNP].
+  - left. apply HP.
+  - destruct R as [HQ | HNQ].
+    * right. apply HQ.
+    * unfold not in H.
+      destruct H.
+      split.
+      + apply HNP.
+      + apply HNQ.
+Qed.
+
+Definition implies_to_or := forall P Q:Prop,
+  (P -> Q) -> (~P \/ Q).
+
+Theorem excluded_middle_implies_implies_to_or: excluded_middle -> implies_to_or.
+Proof.
+  unfold excluded_middle, implies_to_or.
+  intro LEM.
+  intros.
+  specialize LEM with P as E.
+  destruct E as [HP | HNP].
+  * right. apply H. apply HP.
+  * left. apply HNP.
+Qed.
+
+Definition consequentia_mirabilis := forall P:Prop,
+  (~P -> P) -> P.
+
+Theorem excluded_middle_implies_consequentia_mirabilis: excluded_middle -> consequentia_mirabilis.
+Proof.
+  unfold excluded_middle, consequentia_mirabilis.
+  intro LEM.
+  intros.
+  specialize LEM with P as E.
+  destruct E as [HP | HNP].
+  * apply HP.
+  * apply H. apply HNP.
+Qed.
+
+
+Theorem CM_implies_DNE: 
+  consequentia_mirabilis -> double_negation_elimination.
+Proof.
+  unfold consequentia_mirabilis, double_negation_elimination.
+  intro CM.
+  intro P.
+  intro.
+  specialize CM with P.
+  unfold not in H.
+  apply CM.
+  intro.
+  unfold not in H0.
+  destruct H.
+  apply H0.
+Qed.
