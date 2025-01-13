@@ -23,33 +23,15 @@ Inductive Collatz_holds_for : nat -> Prop :=
 
 Example Collatz_holds_for_12 : Collatz_holds_for 12.
 Proof.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
-  apply Chf_more.
-  unfold f.
-  simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
+  apply Chf_more. unfold f. simpl.
   apply Chf_done.
 Qed.
 

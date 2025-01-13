@@ -892,9 +892,8 @@ Theorem even_bool_prop : forall n,
   split.
   * intro H.
     assert (Q: exists k : nat,
-          (n = (if Nat.even n then Nat.double k
-                else S (Nat.double k)))). {
-      apply even_double_conv with (n:=n).
+      (n = (if Nat.even n then Nat.double k else S (Nat.double k)))). {
+        apply even_double_conv with (n:=n).
     }
     destruct Q.
     rewrite H in H0.
@@ -907,7 +906,6 @@ Theorem even_bool_prop : forall n,
     rewrite H.
     apply even_double_n.
 Qed.
-
 
 Theorem eqb_eq : forall n1 n2 : nat,
   n1 =? n2 = true <-> n1 = n2.
@@ -927,21 +925,16 @@ Proof.
     * destruct b1,b2.
       + reflexivity.
       + reflexivity.
-      + simpl in H.
-        discriminate H.
-      + simpl in H.
-        discriminate H.
+      + simpl in H. discriminate H.
+      + simpl in H. discriminate H.
     * destruct b1,b2.
       + reflexivity.
-      + simpl in H.
-      discriminate H.
+      + simpl in H. discriminate H.
       + reflexivity.
-      + simpl in H.
-        discriminate H.
+      + simpl in H. discriminate H.
   - intro H.
     destruct H as [HL HR].
-    * rewrite HL, HR.
-      reflexivity.
+    * rewrite HL, HR. reflexivity.
 Qed.
 
 

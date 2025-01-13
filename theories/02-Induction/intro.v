@@ -477,7 +477,7 @@ Theorem double_bin_def: forall b: bin, double_bin b =
   | B1 n => B0 (B1 n)
   end.
 Proof.
-simpl
+  simpl.
   reflexivity.
 Qed.
 
