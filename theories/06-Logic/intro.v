@@ -2,6 +2,8 @@ Require Import PeanoNat.
 Require Import List.
 Import ListNotations.
 
+From Coq Require Import Unicode.Utf8.
+
 Set Printing Parentheses.
 Set Warnings "-notation-overridden,-parsing".
 Set Warnings "-deprecated-hint-without-locality".

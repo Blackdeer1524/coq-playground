@@ -1,5 +1,7 @@
 Require Import List PeanoNat.
 
+From Coq Require Import Unicode.Utf8.
+
 Import ListNotations.
 
 Set Printing Parentheses.
@@ -43,6 +45,8 @@ Reserved Notation "n <= m" (at level 70).
 (*   | le_n : forall (n : nat), n <= n *)
 (*   | le_S : forall (n m : nat), n <= m -> n <= S m *)
 (* where "n <= m" := (le n m). *)
+
+Check @le_ind.
 
 Example le_3_5 : 3 <= 5.
 Proof.
@@ -565,16 +569,16 @@ Proof.
   destruct H.
 Qed.
 
-Lemma exists_k_for_leq:
-  forall n m, n <= m -> exists k, n + k = m.
+Lemma n_le_m__m_eq_n_plus_k:
+  forall n m, n <= m -> exists k, m = n + k.
 Proof.
   intros.
   induction H as [| m E IH].
   * exists 0. rewrite Nat.add_0_r. reflexivity.
   * destruct IH as [n' H].
-    rewrite <- H.
+    rewrite H.
     exists (S n').
-    rewrite Nat.add_comm.
+    rewrite (Nat.add_comm n (S n')).
     simpl.
     rewrite Nat.add_comm.
     reflexivity.
@@ -591,7 +595,7 @@ Proof.
     apply IH.
 Qed.
 
-Lemma m_eq_n_plus_k_implies_n_le_m:
+Lemma m_eq_n_plus_k__n_le_m:
   forall n m k, m = n + k -> n <= m.
 Proof.
   intros n m k.
@@ -619,44 +623,365 @@ Proof.
       reflexivity.
 Qed.
 
+Lemma n_le_n_plus_k:
+  forall n k, n <= n + k.
+Proof.
+  intros n.
+  induction k.
+  * simpl. 
+    rewrite Nat.add_0_r.
+    apply le_n.
+  * apply le_S in IHk.
+    rewrite Nat.add_succ_r.
+    apply IHk.
+Qed.
+
+Lemma m_eq_n_plus_some_k__n_le_m:
+  forall n m, (exists k, m = n + k) -> n <= m.
+Proof.
+  intros n m H.
+  destruct H as [k' E].
+  rewrite E.
+  apply n_le_n_plus_k.
+Qed.
+
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
   intros.
-  apply exists_k_for_leq in H.
-  apply exists_k_for_leq in H0.
+  apply n_le_m__m_eq_n_plus_k in H.
+  apply n_le_m__m_eq_n_plus_k in H0.
   destruct H as [k E].
   destruct H0 as [k' E'].
-  rewrite <- E in E'.
+  rewrite E in E'.
   rewrite <- Nat.add_assoc in E'.
-  symmetry in E'.
-  apply m_eq_n_plus_k_implies_n_le_m in E'.
+  apply m_eq_n_plus_k__n_le_m in E'.
   apply E'.
 Qed.
 
 Theorem O_le_n : forall n,
-  0 ≤ n.
+  0 <= n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IH].
+  * apply le_n.
+  * apply le_S.
+    apply IH.
+Qed.
+
 Theorem n_le_m__Sn_le_Sm : forall n m,
-  n ≤ m -> S n ≤ S m.
+  n <= m -> S n <= S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H.
+  induction H as [| m' E' IH].
+  * apply le_n.
+  * apply le_S. apply IH.      
+Qed.
+
 Theorem Sn_le_Sm__n_le_m : forall n m,
-  S n ≤ S m -> n ≤ m.
+  S n <= S m -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply n_le_m__m_eq_n_plus_k in H.
+  destruct H.
+  simpl in H.
+  injection H as K.
+  symmetry in K.
+  apply m_eq_n_plus_k__n_le_m in K.
+  apply K.
+Qed.
+
 Theorem lt_ge_cases : forall n m,
-  n < m ∨ n ≥ m.
+  n < m \/ n >= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  unfold lt,ge.
+  induction n.
+  * intros.
+    destruct m.
+    - right. apply le_n.
+    - left. 
+      apply n_le_m__Sn_le_Sm.
+      apply O_le_n.
+  * intros.
+    specialize IHn with (pred m).
+    destruct IHn as [HL | HR].
+    - destruct m.
+      + inversion HL.
+      + simpl in HL.
+        left.
+        apply n_le_m__Sn_le_Sm.
+        apply HL.
+    - destruct m.
+      + right.
+        apply O_le_n.
+      + simpl in HR.
+        right.
+        apply n_le_m__Sn_le_Sm.
+        apply HR.
+Qed.
+
 Theorem le_plus_l : forall a b,
-  a ≤ a + b.
+  a <= a + b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intro a.
+  induction a.
+  * intros.
+    simpl.
+    apply O_le_n.
+  * intros.
+    simpl.
+    apply n_le_m__Sn_le_Sm.
+    apply IHa.
+Qed.
+
 Theorem plus_le : forall n1 n2 m,
-  n1 + n2 ≤ m ->
-  n1 ≤ m ∧ n2 ≤ m.
+  n1 + n2 <= m ->
+  n1 <= m /\ n2 <= m.
 Proof.
- (* FILL IN HERE *) Admitted.
-Theorem add_le_cases : forall n m p q,
-  n + m ≤ p + q -> n ≤ p ∨ m ≤ q.
+  intros.
+  split.
+  - apply n_le_m__m_eq_n_plus_k in H.
+    destruct H.
+    rewrite <- Nat.add_assoc in H.
+    apply m_eq_n_plus_k__n_le_m in H.
+    apply H.
+  - apply n_le_m__m_eq_n_plus_k in H.
+    destruct H.
+    rewrite (Nat.add_comm n1 n2) in H.
+    rewrite <- Nat.add_assoc in H.
+    apply m_eq_n_plus_k__n_le_m in H.
+    apply H.
+Qed.
+
+Lemma sum_le_m__term_le_m: 
+  forall a b n, a + b <= n -> a <= n.
+Proof.
+  intros.
+  apply n_le_m__m_eq_n_plus_k in H.
+  destruct H.
+  rewrite <- Nat.add_assoc in H.
+  apply m_eq_n_plus_k__n_le_m  in H.
+  apply H.
+Qed.
+
+Theorem add_le_cases : 
+  forall n m p q, 
+    n + m <= p + q -> n <= p \/ m <= q.
+Proof.
+  intros n.
+  induction n.
+  * intros.
+    simpl in H.
+    left.
+    apply O_le_n.
+  * intros.
+    destruct p.
+    - right.
+      simpl (0 + q) in H.
+      rewrite Nat.add_comm in H.
+      apply sum_le_m__term_le_m in H.
+      apply H.
+    - simpl in H.
+      apply Sn_le_Sm__n_le_m in H.
+      apply IHn in H.
+      destruct H.
+      + left.
+        apply n_le_m__Sn_le_Sm.
+        apply H.
+      + right.
+        apply H.
+Qed.
+
+Theorem plus_le_compat_l : ∀ n m p,
+  n ≤ m → p + n ≤ p + m.
+Proof.
+  intros.
+  induction p.
+  * simpl. 
+    apply H.
+  * simpl. 
+    apply n_le_m__Sn_le_Sm. 
+    apply IHp.
+Qed.
+
+Theorem plus_le_compat_r : ∀ n m p,
+  n ≤ m → n + p ≤ m + p.
+Proof.
+  intros.
+  induction p.
+  * simpl. 
+    rewrite! Nat.add_0_r.
+    apply H.
+  * rewrite! Nat.add_succ_r.
+    apply n_le_m__Sn_le_Sm. 
+    apply IHp.
+Qed.
+  
+Theorem le_plus_trans : ∀ n m p,
+  n ≤ m → n ≤ m + p.
+Proof.
+  intros.
+  induction p.
+  * rewrite Nat.add_0_r.
+    apply H.
+  * rewrite Nat.add_succ_r.
+    apply le_S.
+    apply IHp.
+Qed.
+
+Theorem n_lt_m__n_le_m : ∀ n m,
+  n < m → n ≤ m.
+Proof.
+  unfold lt.
+  intros.
+  apply S_n_le_m in H.
+  apply H.
+Qed.
+  
+Theorem plus_lt : ∀ n1 n2 m,
+  n1 + n2 < m → n1 < m ∧ n2 < m.
+Proof.
+  unfold lt.
+  intros.
+  generalize dependent n2.
+  generalize dependent n1.
+  induction m.
+  * intros.
+    inversion H.
+  * split.
+    - apply n_le_m__Sn_le_Sm.
+      apply Sn_le_Sm__n_le_m in H.
+      destruct n2.
+      + rewrite Nat.add_0_r in H.
+        apply H.
+      + rewrite Nat.add_succ_r in H.
+        apply IHm in H.
+        destruct H.
+        apply S_n_le_m in H.
+        apply H.
+    - apply n_le_m__Sn_le_Sm.
+      apply Sn_le_Sm__n_le_m in H. 
+      destruct n1.
+      + simpl.
+        apply H.
+      + simpl.
+        apply IHm in H.
+        destruct H.
+        apply S_n_le_m in H0.
+        apply H0.
+Qed.
+
+Theorem leb_complete : ∀ n m,
+  n <=? m = true → n ≤ m.
+Proof.
+  intros n m.
+  generalize dependent n.
+  induction m.
+  * intros.
+    destruct n.
+    - apply O_le_n.
+    - discriminate H.
+  * intros.
+    destruct n.
+    - apply O_le_n.
+    - simpl in H.
+      apply IHm in H.
+      apply n_le_m__Sn_le_Sm.
+      apply H.
+Qed.
+
+Theorem leb_correct : ∀ n m,
+  n ≤ m → n <=? m = true.
+Proof.
+  intros.
+  generalize dependent n.
+  induction m.
+  * intros.
+    inversion H.
+    reflexivity.
+  * intros.
+    destruct n.
+    - reflexivity.
+    - apply Sn_le_Sm__n_le_m in H.
+      apply IHm in H.
+      apply H.
+Qed.
+
+Theorem leb_iff : ∀ n m,
+  n <=? m = true ↔ n ≤ m.
+Proof.
+  split.
+  - apply leb_complete.
+  - apply leb_correct.
+Qed.
+
+Theorem leb_true_trans : ∀ n m o,
+  n <=? m = true → m <=? o = true → n <=? o = true.
+Proof.
+  intros.
+  rewrite leb_iff in *.
+  apply (le_trans n m o).
+  * apply H.
+  * apply H0.
+Qed.
+
+Module R.
+  Inductive R : nat → nat → nat → Prop :=
+    | c1 : R 0 0 0
+    | c2 m n o (H : R m n o ) : R (S m) n (S o)
+    | c3 m n o (H : R m n o ) : R m (S n) (S o)
+    | c4 m n o (H : R (S m) (S n) (S (S o))) : R m n o
+    | c5 m n o (H : R m n o ) : R n m o.
+
+  Definition fR : nat → nat → nat := 
+    fun a => fun b => a + b.
+    
+  Search ((S ?n) = (S ?m)).
+  
+  Lemma R_O_N_N: forall n, R 0 n n.
+  Proof.
+    induction n.
+    * apply c1.
+    * apply c3 in IHn.
+      apply IHn.
+  Qed.
+
+  
+  Theorem R_equiv_fR : ∀ m n o, R m n o ↔ fR m n = o.
+  Proof.
+    intros.
+    split.
+    - intro.
+      unfold fR in *.
+      induction H.
+      * reflexivity.
+      * simpl. rewrite IHR. reflexivity.
+      * rewrite Nat.add_succ_r.
+        rewrite IHR.
+        reflexivity.
+      * simpl in IHR.
+        rewrite Nat.add_succ_r in IHR.
+        injection IHR.
+        intros.
+        apply H0.
+      * rewrite Nat.add_comm.
+        apply IHR.
+    - intro.
+      unfold fR in H.
+      generalize dependent n.
+      generalize dependent o.
+      induction m.
+      * intros.
+        simpl in H.
+        rewrite H.
+        apply R_O_N_N.
+      * intros.
+        simpl in H.
+        rewrite <- Nat.add_succ_r in H.
+        apply IHm in H.
+        apply c4.
+        apply c2.
+        apply c2.
+        apply H.
+  Qed.
+End R.
