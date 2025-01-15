@@ -985,3 +985,73 @@ Module R.
         apply H.
   Qed.
 End R.
+
+Inductive subseq : list nat → list nat → Prop :=
+  | ss_r (l : list nat) : subseq l l 
+  | ss_ins (l' l m r : list nat) (E: subseq l' m) : subseq l' (l ++ m ++ r)
+  | ss_inn (l m r l' : list nat) (E: subseq (l ++ m ++ r) l') : subseq m l'.
+
+Theorem ss_refl : ∀ (l : list nat), subseq l l.
+Proof.
+  intros.
+  apply ss_r.
+Qed.
+
+Theorem ss_app : ∀ (l1 l2 l3 : list nat),
+  subseq l1 l2 → subseq l1 (l2 ++ l3).
+Proof.
+  intros.
+  rewrite <- app_nil_l.
+  rewrite app_assoc.
+  apply (ss_ins l1 [] l2 l3).
+  apply H.
+Qed.
+
+Search (?l1 ++ ?l2 = []).
+
+Lemma ss_nil : forall l1, subseq (l1) [] -> (l1) = [].
+Proof.
+  intros l1 l2.
+  remember [] as e.
+  induction l2.
+  * reflexivity.
+  * apply app_eq_nil in Heqe as E.
+    destruct E.
+    apply app_eq_nil in H0 as E.
+    destruct E.
+    apply IHl2 in H1 as R.
+    rewrite R.
+    rewrite H2.
+    rewrite H.
+    rewrite app_nil_r.
+    reflexivity.
+  * apply IHl2 in Heqe as R.
+    rewrite Heqe in R.
+    apply app_eq_nil in R.
+    destruct R.
+    apply app_eq_nil in H0.
+    destruct H0.
+    rewrite H0.
+    rewrite Heqe.
+    reflexivity.
+Qed.
+
+Theorem ss_trans : ∀ (l1 l2 l3 : list nat),
+  subseq l1 l2 →
+  subseq l2 l3 →
+  subseq l1 l3.
+Proof.
+  intros l1 l2 l3 H.
+  generalize dependent l3.
+  induction H.
+  * intros.
+    apply H.
+  * intros.
+    apply IHsubseq.
+    apply ss_inn in H0.
+    apply H0.
+  * intros.
+    apply IHsubseq in H0.
+    apply ss_inn in H0.
+    apply H0.
+Qed.
