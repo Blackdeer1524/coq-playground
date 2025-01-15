@@ -686,6 +686,7 @@ Proof.
   simpl in H.
   injection H as K.
   symmetry in K.
+  symmetry in K.
   apply m_eq_n_plus_k__n_le_m in K.
   apply K.
 Qed.
@@ -1415,4 +1416,261 @@ Proof.
         apply H.
 Qed.
 
+Module Pumping.
+  Fixpoint pumping_constant {T} (re : reg_exp T) : nat :=
+    match re with
+    | EmptySet => 1
+    | EmptyStr => 1
+    | Char _ => 2
+    | App re1 re2 => pumping_constant re1 + pumping_constant re2
+    | Union re1 re2 => pumping_constant re1 + pumping_constant re2
+    | Star r => pumping_constant r
+    end.
 
+  Lemma pumping_constant_ge_1 :
+    ∀ T (re : reg_exp T),
+      pumping_constant re ≥ 1.
+  Proof.
+    intros T re. 
+    induction re.
+    - (* EmptySet *)
+      apply le_n.
+    - (* EmptyStr *)
+      apply le_n.
+    - (* Char *)
+      apply le_S. apply le_n.
+    - (* App *)
+      simpl.
+      unfold ge in *.
+      apply le_trans with (n:=pumping_constant re1).
+      * apply IHre1. 
+      * apply le_plus_l.
+    - (* Union *)
+      simpl.
+      apply le_trans with (n:=pumping_constant re1).
+      apply IHre1. apply le_plus_l.
+    - (* Star *)
+      simpl. apply IHre.
+  Qed.
+  
+  Lemma pumping_constant_0_false :
+    ∀ T (re : reg_exp T),
+      pumping_constant re = 0 → False.
+  Proof.
+    intros T re H.
+    assert (Hp1 : pumping_constant re ≥ 1).
+    { apply pumping_constant_ge_1. }
+    rewrite H in Hp1. inversion Hp1.
+  Qed.
+  
+  Fixpoint napp {T} (n : nat) (l : list T) : list T :=
+    match n with
+    | 0 => []
+    | S n' => l ++ napp n' l
+    end.
+    
+  Lemma napp_plus: ∀ T (n m : nat) (l : list T),
+    napp (n + m) l = napp n l ++ napp m l.
+  Proof.
+    intros T n m l.
+    induction n.
+    * reflexivity.
+    * simpl.
+      rewrite IHn.
+      rewrite app_assoc.
+      reflexivity.
+  Qed.
+  
+  Lemma napp_star :
+    ∀ T m s1 s2 (re : reg_exp T),
+      s1 =~ re → s2 =~ Star re →
+        napp m s1 ++ s2 =~ Star re.
+  Proof.
+    intros T m s1 s2 re.
+    intros.
+    induction m.
+    * simpl.
+      apply H0.
+    * simpl.
+      rewrite <- app_assoc.
+      apply MStarApp.
+      - apply H.
+      - apply IHm.
+  Qed.
+  
+  Lemma star_star__app_star : 
+    ∀ T s1 s2 (re : reg_exp T),
+      s1 =~ Star re -> s2 =~ Star re → (s1 ++ s2) =~ Star re.
+  Proof.
+    intros.
+    remember (Star re) as r'.
+    induction H.
+    * discriminate Heqr'.
+    * discriminate Heqr'.
+    * discriminate Heqr'.
+    * discriminate Heqr'.
+    * discriminate Heqr'.
+    * simpl. apply H0.
+    * apply IHexp_match2 in Heqr'.
+      rewrite <- app_assoc.
+      apply MStarApp.
+      - apply H.
+      - apply Heqr'.
+      - apply H0.
+  Qed.
+
+  Lemma star__napp_star : 
+    ∀ T m s1 (re : reg_exp T),
+      s1 =~ Star re → napp m s1 =~ Star re.
+  Proof.
+    intros.
+    induction m.
+    * simpl.
+      apply MStar0.
+    * simpl.
+      apply star_star__app_star.
+      - apply H.
+      - apply IHm.
+  Qed.
+  
+  Lemma weak_pumping : ∀ T (re : reg_exp T) s,
+    s =~ re →
+      pumping_constant re ≤ length s →
+        ∃ s1 s2 s3,
+          s = s1 ++ s2 ++ s3 ∧
+          s2 ≠ [] ∧
+          ∀ m, s1 ++ napp m s2 ++ s3 =~ re.
+  Proof.
+    intros T re s Hmatch.
+    induction Hmatch
+      as [ | x | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+         | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
+    * simpl. 
+      intros contra. 
+      inversion contra. 
+    * intro.
+      simpl in H.
+      inversion H.
+      inversion H1.
+    * intros HPC.
+      simpl in HPC.
+      rewrite length_app in HPC.
+      apply add_le_cases in HPC.
+      destruct HPC as [HPC | HPC].
+      apply IH1 in HPC as R.
+      destruct R as [x R].
+      destruct R as [y R].
+      destruct R as [z R].
+      destruct R as [Hs1 [Hy HPump]].
+      exists x,y,(z++s2).
+      split.
+      - rewrite Hs1.
+        rewrite (app_assoc y z s2).
+        rewrite (app_assoc x (y ++ z) s2).
+        reflexivity.
+      - split.
+        + apply Hy.
+        + intros.
+          rewrite (app_assoc (napp m y) z s2).
+          rewrite app_assoc.
+          apply MApp.
+          apply HPump.
+          apply Hmatch2.
+      - apply IH2 in HPC.
+        destruct HPC as [x [y [z [Hs2 [Hy HPump]]]]].
+        exists (s1++x),y,z.
+        split.
+        + rewrite Hs2.
+          rewrite app_assoc.
+          reflexivity.
+        + split.
+          **apply Hy.
+          **intros.
+            rewrite <- (app_assoc s1 x _).
+            apply MApp.
+            --apply Hmatch1.
+            --apply HPump.
+    * intros.
+      simpl in H.
+      apply sum_le_m__term_le_m in H as H'.
+      apply IH in H'.
+      destruct H' as [x [y [z [Hs1 [Hy HPump]]]]].
+      exists x,y,z.
+      split.
+      - apply Hs1.
+      - split.
+        + apply Hy.
+        + intros.
+          apply MUnionL.
+          apply HPump.
+    * intros.
+      simpl in H.
+      rewrite Nat.add_comm in H.
+      apply sum_le_m__term_le_m in H as H'.
+      apply IH in H'.
+      destruct H' as [x [y [z [Hs1 [Hy HPump]]]]].
+      exists x,y,z.
+      split.
+      - apply Hs1.
+      - split.
+        + apply Hy.
+        + intros.
+          apply MUnionR.
+          apply HPump.
+    * intros.
+      simpl in H.
+      apply Nat.le_0_r in H.
+      apply pumping_constant_0_false in H.
+      destruct H.
+    * intros.
+      rewrite length_app in H.
+      simpl in *.
+      exists s1,s2,[].
+      destruct s2.
+      - simpl in H.
+        rewrite Nat.add_0_r in H.
+        apply IH1 in H.
+        admit.
+      - split.
+        + simpl.
+          rewrite app_nil_r.
+          reflexivity.
+        + split.
+          **unfold "<>".
+            intro.
+            discriminate H0.
+          **intro.
+            rewrite app_nil_r.
+            apply MStarApp.
+            --apply Hmatch1.
+            --apply star__napp_star.
+              apply Hmatch2.
+
+
+
+
+
+      
+      
+
+
+
+      
+  
+
+        
+        
+
+
+          
+        
+
+      
+
+
+      
+
+      
+    
+    
