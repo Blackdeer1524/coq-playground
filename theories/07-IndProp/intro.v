@@ -1559,10 +1559,7 @@ Module Pumping.
       apply add_le_cases in HPC.
       destruct HPC as [HPC | HPC].
       apply IH1 in HPC as R.
-      destruct R as [x R].
-      destruct R as [y R].
-      destruct R as [z R].
-      destruct R as [Hs1 [Hy HPump]].
+      destruct R as [x [y [z [Hs1 [Hy HPump]]]]].
       exists x,y,(z++s2).
       split.
       - rewrite Hs1.
@@ -1626,13 +1623,24 @@ Module Pumping.
     * intros.
       rewrite length_app in H.
       simpl in *.
-      exists s1,s2,[].
       destruct s2.
       - simpl in H.
         rewrite Nat.add_0_r in H.
         apply IH1 in H.
-        admit.
-      - split.
+        destruct H as [x [y [z [Hs1 [Hs2 HPump]]]]].
+        exists x,y,z.
+        split.
+        + rewrite app_nil_r.
+          apply Hs1.
+        + split.
+          **apply Hs2.
+          **intros.
+            rewrite <- (app_nil_r (x ++ ((napp m y) ++ z))).
+            apply MStarApp.
+            apply HPump.
+            apply MStar0.
+      - exists s1,(t::s2),[].
+        split.
         + simpl.
           rewrite app_nil_r.
           reflexivity.
@@ -1646,31 +1654,4 @@ Module Pumping.
             --apply Hmatch1.
             --apply star__napp_star.
               apply Hmatch2.
-
-
-
-
-
-      
-      
-
-
-
-      
-  
-
-        
-        
-
-
-          
-        
-
-      
-
-
-      
-
-      
-    
-    
+  Qed.
