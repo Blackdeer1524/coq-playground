@@ -1656,16 +1656,6 @@ Module Pumping.
               apply Hmatch2.
   Qed.
   
-  Theorem contrapositive : forall (P Q : Prop), (P -> Q) -> ~ Q -> ~ P.
-  Proof.
-    intros P Q H HnQ.
-    unfold not in *.
-    intro HP.
-    destruct HnQ.
-    apply H.
-    apply HP.
-  Qed.
-  
   Lemma add_le_cases_smarter:
     forall a b c d, (a + b) <= (c + d) -> 
       (a <= c) \/ (a > c /\ b <= d).
@@ -1883,3 +1873,131 @@ Module Pumping.
           **apply Hmatch2.
   Qed.
 End Pumping.
+
+Theorem filter_not_empty_In : ∀ n l,
+  filter (fun x => n =? x) l ≠ [] → In n l.
+Proof.
+  intros n l. 
+  induction l as [|m l' IHl'].
+  - simpl. intros H. apply H. reflexivity.
+  - simpl. 
+    destruct (n =? m) eqn:H.
+    + intros _. 
+      rewrite Nat.eqb_eq in H. 
+      rewrite H.
+      left. 
+      reflexivity.
+    + intros H'. 
+      right. 
+      apply IHl'. 
+      apply H'.
+Qed.
+
+Inductive reflect (P : Prop) : bool → Prop :=
+  | ReflectT (H : P) : reflect P true
+  | ReflectF (H : ¬ P) : reflect P false.
+
+Theorem iff_reflect : ∀ P b, (P ↔ b = true) → reflect P b.
+Proof.
+  intros P b H. 
+  destruct b eqn:Eb.
+  - apply ReflectT. 
+    rewrite H. 
+    reflexivity.
+  - apply ReflectF. 
+    rewrite H. 
+    intros H'. 
+    discriminate.
+Qed.
+
+Theorem reflect_iff : ∀ P b, reflect P b → (P ↔ b = true).
+Proof.
+  intros.
+  inversion H.
+  * split.
+    - intro.
+      reflexivity.
+    - intro.
+      apply H0.
+  * split.
+    - intro.
+      unfold not in H0.
+      apply H0 in H2.
+      destruct H2.
+    - intros.
+      discriminate H2.
+Qed.
+
+Lemma eqbP : ∀ n m, reflect (n = m) (n =? m).
+Proof.
+  intros n m. 
+  apply iff_reflect. 
+  rewrite Nat.eqb_eq. 
+  reflexivity.
+Qed.
+
+Print eqbP.
+
+Theorem filter_not_empty_In' : ∀ n l,
+  filter (fun x => n =? x) l ≠ [] →
+  In n l.
+Proof.
+  intros n l. 
+  induction l as [| m l' IHl'].
+  - simpl. 
+    intros H. 
+    apply H. 
+    reflexivity.
+  - simpl. 
+    destruct (eqbP n m) as [H | H].
+    + intros _. 
+      rewrite H. 
+      left. 
+      reflexivity.
+    + intros H'.
+      right. 
+      apply IHl'. 
+      apply H'.
+Qed.
+
+Fixpoint count n l :=
+  match l with
+  | [] => 0
+  | m :: l' => (if n =? m then 1 else 0) + count n l'
+  end.
+
+Theorem eqbP_practice : ∀ n l,
+  count n l = 0 → ~(In n l).
+Proof.
+  intros n l Hcount. 
+  induction l as [| m l' IHl'].
+  * simpl.
+    intro.
+    destruct H.
+  * unfold not.
+    simpl in *.
+    destruct (eqbP n m).
+    - discriminate Hcount.
+    - simpl in Hcount.
+      intros.
+      destruct H0.
+      + destruct H.
+        rewrite H0.
+        reflexivity.
+      + apply IHl' in Hcount.
+        apply Hcount.
+        apply H0.
+Qed.
+
+Print eqbP.
+
+Theorem ev_4'' : ev 4.
+Proof.
+  Show Proof.
+  apply ev_SS.
+  Show Proof.
+  apply ev_SS.
+  Show Proof.
+  apply ev_0.
+  Show Proof.
+Qed.
