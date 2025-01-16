@@ -1655,3 +1655,231 @@ Module Pumping.
             --apply star__napp_star.
               apply Hmatch2.
   Qed.
+  
+  Theorem contrapositive : forall (P Q : Prop), (P -> Q) -> ~ Q -> ~ P.
+  Proof.
+    intros P Q H HnQ.
+    unfold not in *.
+    intro HP.
+    destruct HnQ.
+    apply H.
+    apply HP.
+  Qed.
+  
+  Lemma add_le_cases_smarter:
+    forall a b c d, (a + b) <= (c + d) -> 
+      (a <= c) \/ (a > c /\ b <= d).
+  Proof.
+    intros.
+    unfold gt,lt.
+    apply Nat.add_le_cases in H.
+    assert (R:(a ≤ c) ∨ (b ≤ d) -> (a <=? c = true) \/ (b <=? d = true)). {
+      intros.
+      destruct H.
+      - apply leb_correct in H.
+        left.
+        apply H.
+      - right.
+        apply leb_correct in H.
+        apply H.
+    }
+    apply R in H.
+    destruct (a <=? c) eqn:Q.
+    * left.
+      apply leb_iff.
+      apply Q.
+    * right.
+      split.
+      - rewrite Nat.leb_gt in Q.
+        unfold lt in Q.
+        apply Q.
+      - destruct H.
+        + discriminate H.
+        + apply leb_iff.
+          apply H.
+  Qed.
+  
+  Lemma re_matcher_then_star_matches:
+    forall T (s : list T) re, s =~ re -> s =~ (Star re).
+  Proof.
+    intros.
+    rewrite <- (app_nil_r s).
+    apply MStarApp.
+    * apply H.
+    * apply MStar0.
+  Qed.
+
+  Lemma pumping : ∀ T (re : reg_exp T) s,
+    s =~ re →
+      pumping_constant re ≤ length s →
+      ∃ s1 s2 s3,
+        s = s1 ++ s2 ++ s3 ∧
+        s2 ≠ [] ∧
+        length s1 + length s2 ≤ pumping_constant re ∧
+        ∀ m, s1 ++ napp m s2 ++ s3 =~ re.
+  Proof.
+    intros T re s Hmatch.
+    induction Hmatch
+      as [ | x | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+         | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
+    * intros.
+      simpl in H.
+      inversion H.
+    * simpl.
+      intros.
+      inversion H.
+      inversion H1.
+    * simpl.
+      intros.
+      rewrite length_app in H.
+      apply add_le_cases_smarter in H.
+      destruct H as [EL | [NEL ER]].
+      - apply IH1 in EL as IH'.
+        destruct IH' as [x [y[z [Hs1 [Hy [Hpc HPump]]]]]].
+        exists x,y,(z++s2).
+        split. {
+          rewrite Hs1.
+          rewrite <- (app_assoc x (y ++ z) s2).
+          rewrite <- (app_assoc y z s2).
+          reflexivity.
+        }
+        split. {
+          apply Hy.
+        }
+        split. {
+          apply (le_trans (length x + length y) (pumping_constant re1) (pumping_constant re1 + pumping_constant re2)).
+          apply Hpc.
+          apply le_plus_l.
+        }
+        intros.
+        rewrite app_assoc.
+        rewrite app_assoc.
+        apply MApp.
+        + rewrite <- app_assoc.
+          apply HPump.
+        + apply Hmatch2.
+      - apply IH2 in ER as IH'.
+        destruct IH' as [x [y [z [Hs2 [Hy [Hpc HPump]]]]]].
+        exists (s1 ++ x), y ,z.
+        split. {
+          rewrite <- app_assoc.
+          rewrite <- Hs2.
+          reflexivity.
+        }
+        split. {
+          apply Hy.
+        }
+        split. {
+          rewrite length_app.
+          rewrite <- Nat.add_assoc. 
+          apply Nat.add_le_mono.
+          unfold gt,lt in NEL.
+          apply S_n_le_m.
+          apply NEL.
+          apply Hpc.
+        }
+        intros.
+        rewrite <- app_assoc.
+        apply MApp.
+        + apply Hmatch1.
+        + apply HPump.
+    * simpl.
+      intros.
+      apply sum_le_m__term_le_m in H as E.
+      apply IH in E.
+      destruct E as [x [y [z [Hs1 [Hy [Hpc HPump]]]]]].
+      exists x, y, z.
+      split. {
+        apply Hs1.
+      }
+      split. {
+        apply Hy.
+      }
+      split. {
+        apply (le_trans _ (pumping_constant re1) _).
+        apply Hpc.
+        apply Nat.le_add_r.
+      }
+      intros.
+      apply MUnionL.
+      apply HPump.
+    * simpl.
+      intros.
+      rewrite Nat.add_comm in H.
+      apply sum_le_m__term_le_m in H as E.
+      apply IH in E.
+      destruct E as [x [y [z [Hs1 [Hy [Hpc HPump]]]]]].
+      exists x, y, z.
+      split. {
+        apply Hs1.
+      }
+      split. {
+        apply Hy.
+      }
+      split. {
+        apply (le_trans _ (pumping_constant re2) _).
+        apply Hpc.
+        rewrite Nat.add_comm.
+        apply Nat.le_add_r.
+      }
+      intros.
+      apply MUnionR.
+      apply HPump.
+    * simpl.
+      intros.
+      inversion H.
+      apply pumping_constant_0_false in H1.
+      destruct H1.
+    * intros.
+      rewrite length_app in H.
+      destruct s1.
+      - simpl in *.
+        apply IH2 in H.
+        apply H.
+      - destruct (length (t::s1) <=? pumping_constant re) eqn:Q.
+        + apply leb_iff in Q.
+          exists [],(t::s1),(s2).
+          split. {
+            reflexivity.
+          }
+          split. {
+            intro.
+            discriminate.
+          }
+          split. {
+            simpl in *.
+            apply Q.
+          }
+          intro.
+          simpl.
+          apply napp_star.
+          apply Hmatch1.
+          apply Hmatch2.
+        + apply Nat.leb_gt in Q.
+          apply Nat.lt_le_incl in Q.
+          apply IH1 in Q.
+          destruct Q as [x [y [z [Hs1 [Hy [HPC HPump]]]]]].
+          exists x,y,(z ++ s2).
+          split. {
+            rewrite Hs1.
+            rewrite <-app_assoc.
+            rewrite <-app_assoc.
+            reflexivity.
+          }
+          split. {
+            apply Hy.
+          }
+          split. {
+            simpl.
+            apply HPC.
+          }
+          intros.
+          rewrite app_assoc.
+          rewrite app_assoc.
+          apply MStarApp.
+          **rewrite <- app_assoc.
+            apply HPump.
+          **apply Hmatch2.
+  Qed.
+End Pumping.
