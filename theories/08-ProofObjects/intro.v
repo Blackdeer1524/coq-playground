@@ -1,6 +1,7 @@
 Require Import List PeanoNat.
 
 From Coq Require Import Unicode.Utf8.
+From Coq Require Import Setoids.Setoid.
 
 Set Printing Parentheses.
 
@@ -471,3 +472,18 @@ Qed.
 Definition proof_irrelevance : Prop :=
   ∀ (P : Prop) (pf1 pf2 : P), pf1 = pf2.
 
+Theorem pe_implies_pi :
+  propositional_extensionality → proof_irrelevance.
+Proof.
+  unfold propositional_extensionality, proof_irrelevance.
+  intro PE.
+  intros P pf1 pf2.
+  apply pe_implies_true_eq in pf1 as E. 
+  * destruct E.
+    destruct pf1, pf2.
+    reflexivity.
+  * unfold propositional_extensionality.
+    intros. 
+    apply PE. 
+    apply H.
+Qed.
