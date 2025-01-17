@@ -1873,3 +1873,32 @@ Module Pumping.
           **apply Hmatch2.
   Qed.
 End Pumping.
+
+Inductive nostutter {X:Type} : list X → Prop :=
+  | ns_nil : nostutter []
+  | ns_singl (a: X) : nostutter [a]
+  | ns_a (h : X) (t : list X) (H : nostutter (h :: t)) (a : X) (I: a <> h): nostutter (a :: (h :: t)).
+  
+Example test_nostutter_1: nostutter [3;1;4;1;5;6].
+Proof. 
+  repeat constructor; apply Nat.eqb_neq; auto.
+Qed.
+
+Example test_nostutter_2: nostutter (@nil nat).
+Proof. 
+  repeat constructor; apply Nat.eqb_neq; auto.
+Qed.
+
+Example test_nostutter_3: nostutter [5].
+Proof. 
+  repeat constructor; auto. 
+Qed.
+
+Example test_nostutter_4: not (nostutter [3;1;1;4]).
+Proof. 
+  intro.
+  repeat match goal with
+    h: nostutter _ |- _ => inversion h; clear h; subst
+  end.
+  contradiction; auto. 
+Qed.
