@@ -1902,3 +1902,119 @@ Proof.
   end.
   contradiction; auto. 
 Qed.
+
+Inductive merge {X:Type} : list X → list X → list X → Prop :=
+  | merge_nil : merge [] [] []
+  | merge_pref l l' r r' m (H1 : merge l' r' m) : 
+                merge (l ++ l') (r ++ r') (l ++ r ++ m)
+  .
+
+Lemma merge_pref_l: 
+  ∀ T (l': list T) l r m, merge l r m -> merge (l' ++ l) r (l' ++ m).
+Proof.
+  intros.
+  replace r with ([] ++ r). {
+    replace (l' ++ m) with (l' ++ [] ++ m). {
+      apply merge_pref.
+      apply H.
+    }
+    reflexivity.
+  }
+  reflexivity.
+Qed.
+
+Lemma merge_pref_r:
+  ∀ T l (r': list T) r m, merge l r m -> merge l (r' ++ r) (r' ++ m).
+Proof.
+  intros.
+  replace l with ([] ++ l). {
+    replace (r' ++ m) with ([] ++ r' ++ m). {
+      apply merge_pref.
+      apply H.
+    }
+    reflexivity.
+  }
+  reflexivity.
+Qed.
+    
+Lemma merge_symm: 
+  ∀ T (l : list T) r m, merge l r m -> merge r l m.
+Proof.
+  intros.
+  induction H.
+  * apply merge_nil.
+  * apply (merge_pref [] (r ++ r') l l' _).
+    apply (merge_pref r r' [] l' _).
+    apply IHmerge.
+Qed.
+
+Lemma merge_nil_l: 
+  ∀ T (l : list T), merge [] l l.
+Proof.
+  intros.
+  assert (Q: merge [] l l = merge ([] ++ []) (l ++ []) ([] ++ l ++ [])). {
+    rewrite! app_nil_r.
+    reflexivity.
+  }
+  rewrite Q.
+  apply merge_pref.
+  apply merge_nil.
+Qed.
+
+Lemma merge_app: 
+  ∀ T (l1 : list T) l2, merge l1 l2 (l1 ++ l2).
+Proof.
+  intros.
+  assert (Q: merge l1 l2 (l1 ++ l2) = merge (l1 ++ []) (l2 ++ []) (l1 ++ l2 ++ [])). {
+    rewrite! app_nil_r.
+    reflexivity.
+  }
+  rewrite Q.
+  apply merge_pref.
+  apply merge_nil.
+Qed.
+
+Example merge_test_1 : merge [1;6;2] [4;3] [1;4;6;2;3].
+Proof.
+  replace ([1;6;2]) with ([1] ++ [6;2]). {
+    replace ([4;3]) with ([4] ++ [3]). {
+      replace ([1;4;6;2;3]) with ([1] ++ [4] ++ [6;2] ++ [3]). {
+        apply merge_pref_l.
+        apply merge_pref_r.
+        apply merge_app.
+      } 
+      reflexivity.
+    }
+    reflexivity.
+  }
+  reflexivity.
+Qed.
+
+Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
+  match l with
+  | nil => True
+  | h :: t => P h ∧ All P t
+  end.
+
+Lemma All_distr: ∀ (X: Type) (test : X -> Prop) l1 l2,
+  All test (l1 ++ l2) -> All test l1 ∧ All test l2.
+Proof.
+  intros.
+  
+
+
+
+Theorem merge_filter : ∀ (X : Set) (test: X → bool) (l l1 l2 : list X),
+  merge l1 l2 l →
+    All (λ n, test n = true) l1 →
+      All (λ n, test n = false) l2 →
+        filter test l = l1.
+Proof.
+  intros X test l l1 l2 HMerge HL1 HL2.
+  induction HMerge.
+  * reflexivity.
+  * 
+
+
+
+
