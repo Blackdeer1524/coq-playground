@@ -19,9 +19,9 @@ Definition f (n : nat) :=
     then div2 n
     else 3 * n + 1.
 
-Inductive Collatz_holds_for : nat -> Prop :=
+Inductive Collatz_holds_for : nat → Prop :=
   | Chf_done : Collatz_holds_for 1
-  | Chf_more : forall (n : nat), Collatz_holds_for (f n) -> Collatz_holds_for n.
+  | Chf_more : ∀ (n : nat), Collatz_holds_for (f n) → Collatz_holds_for n.
 
 Example Collatz_holds_for_12 : Collatz_holds_for 12.
 Proof.
@@ -37,13 +37,13 @@ Proof.
   apply Chf_done.
 Qed.
 
-Conjecture collatz : forall n, Collatz_holds_for n.
+Conjecture collatz : ∀ n, Collatz_holds_for n.
 
 Reserved Notation "n <= m" (at level 70).
 
-(* Inductive le : nat -> nat -> Prop := *)
-(*   | le_n : forall (n : nat), n <= n *)
-(*   | le_S : forall (n m : nat), n <= m -> n <= S m *)
+(* Inductive le : nat → nat → Prop := *)
+(*   | le_n : ∀ (n : nat), n <= n *)
+(*   | le_S : ∀ (n m : nat), n <= m → n <= S m *)
 (* where "n <= m" := (le n m). *)
 
 Check @le_ind.
@@ -55,11 +55,11 @@ Proof.
   apply le_n.
 Qed.
 
-Inductive clos_trans {X : Type} (R : X -> X -> Prop) : X -> X -> Prop :=
-  | t_step : forall (x y : X), R x y -> clos_trans R x y
+Inductive clos_trans {X : Type} (R : X → X → Prop) : X → X → Prop :=
+  | t_step : ∀ (x y : X), R x y → clos_trans R x y
   | t_trans :
-      forall (x y z : X),
-        clos_trans R x y -> clos_trans R y z -> clos_trans R x z.
+      ∀ (x y z : X),
+        clos_trans R x y → clos_trans R y z → clos_trans R x z.
 
 Inductive Person : Type :=
   | Sage
@@ -67,12 +67,12 @@ Inductive Person : Type :=
   | Ridley
   | Moss.
 
-Inductive parent_of : Person -> Person -> Prop :=
+Inductive parent_of : Person → Person → Prop :=
   | po_SC : parent_of Sage Cleo
   | po_SR : parent_of Sage Ridley
   | po_CM : parent_of Cleo Moss.
 
-Definition ancestor_of : Person -> Person -> Prop := clos_trans parent_of.
+Definition ancestor_of : Person → Person → Prop := clos_trans parent_of.
 
 Example ancestor_of1 : ancestor_of Sage Moss.
 Proof.
@@ -84,11 +84,11 @@ Proof.
       apply po_CM.
 Qed.
 
-Inductive Perm3 {X : Type} : list X -> list X -> Prop :=
+Inductive Perm3 {X : Type} : list X → list X → Prop :=
   | perm3_swap12 (a b c : X) : Perm3 [a;b;c] [b;a;c]
   | perm3_swap23 (a b c : X) : Perm3 [a;b;c] [a;c;b]
   | perm3_trans (l1 l2 l3 : list X) :
-      Perm3 l1 l2 -> Perm3 l2 l3 -> Perm3 l1 l3.
+      Perm3 l1 l2 → Perm3 l2 l3 → Perm3 l1 l3.
 
 
 Example Perm3_example1 : Perm3 [1;2;3] [2;3;1].
@@ -105,7 +105,7 @@ Proof.
   - apply perm3_swap12.
 Qed.
 
-Inductive ev : nat -> Prop :=
+Inductive ev : nat → Prop :=
   | ev_0 : ev 0
   | ev_SS (n : nat) (H : ev n) : ev (S (S n)).
   
@@ -119,7 +119,7 @@ Qed.
 Theorem ev_4' : ev 4.
 Proof. apply (ev_SS 2 (ev_SS 0 ev_0)). Qed.
 
-Theorem ev_plus4 : forall n, ev n -> ev (4 + n).
+Theorem ev_plus4 : ∀ n, ev n → ev (4 + n).
 Proof.
   intros n. 
   simpl. 
@@ -131,7 +131,7 @@ Qed.
 
 
 Lemma double_def: 
-  forall n, 
+  ∀ n, 
     Nat.double n = match n with
                     | O => O
                     | S n' => S (S (Nat.double n'))
@@ -149,14 +149,14 @@ Proof.
 Qed.
 
 Lemma double_S_n: 
-  forall n, Nat.double (S n) = S (S (Nat.double n)).
+  ∀ n, Nat.double (S n) = S (S (Nat.double n)).
 Proof.
   intro.
   apply double_def.
 Qed.
   
 Theorem ev_double : 
-  forall n, ev (Nat.double n).
+  ∀ n, ev (Nat.double n).
 Proof.
   intro.
   induction n as [|n' IHn'].
@@ -168,8 +168,8 @@ Proof.
 Qed.
 
 Theorem ev_inversion : 
-  forall (n : nat), 
-    ev n -> (n = 0) \/ (exists n', n = S (S n') /\ ev n').
+  ∀ (n : nat), 
+    ev n → (n = 0) \/ (exists n', n = S (S n') /\ ev n').
 Proof.
   intros n E. 
   destruct E as [ | n' E'] eqn:EE.
@@ -179,7 +179,7 @@ Proof.
     + apply E'.
 Qed.
 
-Theorem evSS_ev : forall n, ev (S (S n)) -> ev n.
+Theorem evSS_ev : ∀ n, ev (S (S n)) → ev n.
 Proof.
   intros n H. 
   apply ev_inversion in H. 
@@ -192,7 +192,7 @@ Proof.
 Qed.
 
 Theorem evSS_ev' : 
-  forall n, ev (S (S n)) -> ev n.
+  ∀ n, ev (S (S n)) → ev n.
 Proof.
   intros n E. 
   inversion E as [| n' E' Heq].
@@ -215,10 +215,10 @@ Proof.
   inversion H. 
 Qed.
 
-Search (S ?n = S ?m -> ?n = ?m).
+Search (S ?n = S ?m → ?n = ?m).
 
-Theorem SSSSev__even : forall n,
-  ev (S (S (S (S n)))) -> ev n.
+Theorem SSSSev__even : ∀ n,
+  ev (S (S (S (S n)))) → ev n.
 Proof.
   intros.
   apply ev_inversion in H.
@@ -232,8 +232,8 @@ Proof.
       apply H0.
 Qed.
       
-Theorem SSSSev__even' : forall n,
-  ev (S (S (S (S n)))) -> ev n.
+Theorem SSSSev__even' : ∀ n,
+  ev (S (S (S (S n)))) → ev n.
 Proof.
   intros.
   inversion H as [Heq | n' E' Heq].
@@ -242,7 +242,7 @@ Proof.
 Qed.
 
 Theorem ev5_nonsense :
-  ev 5 -> 2 + 2 = 9.
+  ev 5 → 2 + 2 = 9.
 Proof.
   intro.
   simpl.
@@ -252,7 +252,7 @@ Proof.
 Qed.
 
 Theorem ev5_nonsense' :
-  ev 5 -> 2 + 2 = 9.
+  ev 5 → 2 + 2 = 9.
 Proof.
   intros.
   simpl.
@@ -274,16 +274,16 @@ Proof.
 Qed.
 
 
-Theorem inversion_ex1 : forall (n m o : nat),
-  [n; m] = [o; o] -> [n] = [m].
+Theorem inversion_ex1 : ∀ (n m o : nat),
+  [n; m] = [o; o] → [n] = [m].
 Proof.
   intros n m o H. 
   inversion H.
   reflexivity. 
 Qed.
 
-Theorem inversion_ex2 : forall (n : nat),
-  S n = O -> 2 + 2 = 5.
+Theorem inversion_ex2 : ∀ (n : nat),
+  S n = O → 2 + 2 = 5.
 Proof.
   intros n contra. 
   inversion contra. 
@@ -292,8 +292,8 @@ Qed.
 Definition Even (n : nat) : Prop := 
   exists k, n = Nat.double k.
 
-Lemma ev_Even_firsttry' : forall n,
-  ev n -> Even n.
+Lemma ev_Even_firsttry' : ∀ n,
+  ev n → Even n.
 Proof.
   unfold Even.
   intros n E. 
@@ -303,7 +303,7 @@ Proof.
 Abort.
     
 Lemma ev_Even : 
-  forall n, ev n -> Even n.
+  ∀ n, ev n → Even n.
 Proof.
   intros n E.
   induction E as [|n' E' IH].
@@ -318,14 +318,14 @@ Proof.
 Qed.  
 
 Theorem ev_Even_iff : 
-  forall n, ev n <-> Even n.
+  ∀ n, ev n ↔ Even n.
 Proof.
   intros n. split.
   - apply ev_Even.
   - unfold Even. intros [k Hk]. rewrite Hk. apply ev_double.
 Qed.
 
-Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
+Theorem ev_sum : ∀ n m, ev n → ev m → ev (n + m).
 Proof.
   intros.
   generalize dependent m.
@@ -344,12 +344,12 @@ Proof.
     apply Em.
 Qed.
 
-Inductive ev' : nat -> Prop :=
+Inductive ev' : nat → Prop :=
   | ev'_0 : ev' 0
   | ev'_2 : ev' 2
   | ev'_sum n m (Hn : ev' n) (Hm : ev' m) : ev' (n + m).
 
-Lemma ev_implies_ev': forall n, ev n -> ev' n.
+Lemma ev_implies_ev': ∀ n, ev n → ev' n.
 Proof.
   intros.
   induction H as [| n' E' IH].
@@ -359,7 +359,7 @@ Proof.
     - apply IH.
 Qed.
 
-Lemma ev'_implies_ev': forall n, ev' n -> ev n.
+Lemma ev'_implies_ev': ∀ n, ev' n → ev n.
 Proof.
   intros.
   induction H as [| | n' m' En' Em' Q].
@@ -370,7 +370,7 @@ Proof.
     apply IHQ.
 Qed.
 
-Theorem ev'_ev : forall n, ev' n <-> ev n.
+Theorem ev'_ev : ∀ n, ev' n ↔ ev n.
 Proof.
   intro.
   split.
@@ -378,8 +378,8 @@ Proof.
   * apply ev_implies_ev'.
 Qed.
 
-Theorem ev_ev__ev : forall n m,
-  ev (n + m) -> ev n -> ev m.
+Theorem ev_ev__ev : ∀ n m,
+  ev (n + m) → ev n → ev m.
 Proof.
   intros n m HNM HN.
   induction HN as [| n' E' IH].
@@ -390,8 +390,8 @@ Proof.
     apply H0.
 Qed.
 
-Lemma ev_inversion': forall n: nat,
-  ev n -> ev 0 \/ exists k, n = S (S k) /\ ev k.
+Lemma ev_inversion': ∀ n: nat,
+  ev n → ev 0 \/ exists k, n = S (S k) /\ ev k.
 Proof.
   intros.
   destruct H.
@@ -402,13 +402,7 @@ Proof.
     - apply H.
 Qed.
 
-(* Lemma dflajafsj: forall n k, *)
-(*   n = Nat.double (S k) -> exists n', n = (S (S n')) /\ n' = Nat.double k. *)
-(* Proof. *)
-(*   intros. *)
-
-
-Lemma n_eq_S_k: forall n m, n = S m -> exists n', n = S n' /\ n' = m.
+Lemma n_eq_S_k: ∀ n m, n = S m → exists n', n = S n' /\ n' = m.
 Proof.
   intros.
   exists m.
@@ -417,7 +411,7 @@ Proof.
   * reflexivity.
 Qed.
   
-Lemma Ev_ev: forall n, Even n -> ev n.
+Lemma Ev_ev: ∀ n, Even n → ev n.
 Proof. 
   intros.
   unfold Even in H.
@@ -441,7 +435,7 @@ Proof.
     apply E.
 Qed.
 
-Theorem Ev_iff_ev: forall n, Even n <-> ev n.
+Theorem Ev_iff_ev: ∀ n, Even n <-> ev n.
 Proof.
   intro.
   split.
@@ -450,7 +444,7 @@ Proof.
 Qed.
 
 Lemma fadsfa: 
-  forall (n m : nat), ev (n + m) -> ((ev n -> ev m) \/ ((~ (ev n)) -> (~(ev m)))).
+  ∀ (n m : nat), ev (n + m) → ((ev n → ev m) \/ ((~ (ev n)) → (~(ev m)))).
 Proof.
   intros.
   left.
@@ -458,7 +452,7 @@ Proof.
   apply H.
 Qed.
 
-Lemma n_minus_n: forall n, n - n = 0.
+Lemma n_minus_n: ∀ n, n - n = 0.
 Proof.
   intros.
   induction n.
@@ -466,7 +460,7 @@ Proof.
   * simpl. apply IHn.
 Qed.
 
-Lemma S_n_minus_n: forall n, S n - n = 1.
+Lemma S_n_minus_n: ∀ n, S n - n = 1.
 Proof.
   induction n.
   * reflexivity.
@@ -475,8 +469,8 @@ Proof.
     apply IHn.
 Qed.
 
-Lemma dljnlvjnklads: forall n m k,
-  k <=? m = true -> (n + m) - k = n + (m - k).
+Lemma dljnlvjnklads: ∀ n m k,
+  k <=? m = true → (n + m) - k = n + (m - k).
 Proof.
   intros n.
   induction n.
@@ -485,7 +479,7 @@ Proof.
 Admitted.
     
 
-Lemma vlilhjerf: forall n m, 
+Lemma vlilhjerf: ∀ n m, 
   ((n + (S m)) - m) = S n.
 Proof.
   intros.
@@ -499,7 +493,7 @@ Proof.
     - admit.
 Admitted.
 
-Lemma adfdgafg: forall n m R, n + m = R -> n = R - m.
+Lemma adfdgafg: ∀ n m R, n + m = R → n = R - m.
 Proof.
   intros n.
   induction n.
@@ -514,13 +508,13 @@ Proof.
       rewrite <- H.
 Admitted.
 
-Theorem ev_plus_plus : forall n m p,
-  ev (n+m) -> ev (n+p) -> ev (m+p).
+Theorem ev_plus_plus : ∀ n m p,
+  ev (n+m) → ev (n+p) → ev (m+p).
 Proof.
 Admitted.
 
 Module Playground.
-  Inductive le : nat -> nat -> Prop :=
+  Inductive le : nat → nat → Prop :=
     | le_n (n : nat) : le n n
     | le_S (n m : nat) (H : le n m) : le n (S m).
 
@@ -542,7 +536,7 @@ Module Playground.
   Qed.
 
   Theorem test_le3 :
-    (2 <= 1) -> 2 + 2 = 5.
+    (2 <= 1) → 2 + 2 = 5.
   Proof.
     intros H. 
     inversion H. 
@@ -550,18 +544,18 @@ Module Playground.
   Qed.
 End Playground.
 
-Inductive total_relation : nat -> nat -> Prop :=
+Inductive total_relation : nat → nat → Prop :=
   | Useless (n : nat) (m : nat) : total_relation n m.
   
- Theorem total_relation_is_total : forall n m, total_relation n m.
+ Theorem total_relation_is_total : ∀ n m, total_relation n m.
   Proof.
   intros.
   apply Useless.
 Qed.
 
-Inductive empty_relation : nat -> nat -> Prop := .
+Inductive empty_relation : nat → nat → Prop := .
   
-Theorem empty_relation_is_empty : forall n m, ~ empty_relation n m.
+Theorem empty_relation_is_empty : ∀ n m, ~ empty_relation n m.
 Proof.
   intros.
   unfold not.
@@ -570,7 +564,7 @@ Proof.
 Qed.
 
 Lemma n_le_m__m_eq_n_plus_k:
-  forall n m, n <= m -> exists k, m = n + k.
+  ∀ n m, n <= m → exists k, m = n + k.
 Proof.
   intros.
   induction H as [| m E IH].
@@ -585,7 +579,7 @@ Proof.
 Qed.
 
 Lemma S_n_le_m: 
-  forall n m, S n <= m -> n <= m.
+  ∀ n m, S n <= m → n <= m.
 Proof.
   intros.
   induction H as [| m' E' IH].
@@ -596,7 +590,7 @@ Proof.
 Qed.
 
 Lemma m_eq_n_plus_k__n_le_m:
-  forall n m k, m = n + k -> n <= m.
+  ∀ n m k, m = n + k → n <= m.
 Proof.
   intros n m k.
   generalize dependent n.
@@ -624,7 +618,7 @@ Proof.
 Qed.
 
 Lemma n_le_n_plus_k:
-  forall n k, n <= n + k.
+  ∀ n k, n <= n + k.
 Proof.
   intros n.
   induction k.
@@ -637,7 +631,7 @@ Proof.
 Qed.
 
 Lemma m_eq_n_plus_some_k__n_le_m:
-  forall n m, (exists k, m = n + k) -> n <= m.
+  ∀ n m, (exists k, m = n + k) → n <= m.
 Proof.
   intros n m H.
   destruct H as [k' E].
@@ -645,7 +639,7 @@ Proof.
   apply n_le_n_plus_k.
 Qed.
 
-Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
+Lemma le_trans : ∀ m n o, m <= n → n <= o → m <= o.
 Proof.
   intros.
   apply n_le_m__m_eq_n_plus_k in H.
@@ -658,7 +652,7 @@ Proof.
   apply E'.
 Qed.
 
-Theorem O_le_n : forall n,
+Theorem O_le_n : ∀ n,
   0 <= n.
 Proof.
   intros n.
@@ -668,8 +662,8 @@ Proof.
     apply IH.
 Qed.
 
-Theorem n_le_m__Sn_le_Sm : forall n m,
-  n <= m -> S n <= S m.
+Theorem n_le_m__Sn_le_Sm : ∀ n m,
+  n <= m → S n <= S m.
 Proof.
   intros n m H.
   induction H as [| m' E' IH].
@@ -677,8 +671,8 @@ Proof.
   * apply le_S. apply IH.      
 Qed.
 
-Theorem Sn_le_Sm__n_le_m : forall n m,
-  S n <= S m -> n <= m.
+Theorem Sn_le_Sm__n_le_m : ∀ n m,
+  S n <= S m → n <= m.
 Proof.
   intros.
   apply n_le_m__m_eq_n_plus_k in H.
@@ -691,7 +685,7 @@ Proof.
   apply K.
 Qed.
 
-Theorem lt_ge_cases : forall n m,
+Theorem lt_ge_cases : ∀ n m,
   n < m \/ n >= m.
 Proof.
   intros n.
@@ -721,7 +715,7 @@ Proof.
         apply HR.
 Qed.
 
-Theorem le_plus_l : forall a b,
+Theorem le_plus_l : ∀ a b,
   a <= a + b.
 Proof.
   intro a.
@@ -735,8 +729,8 @@ Proof.
     apply IHa.
 Qed.
 
-Theorem plus_le : forall n1 n2 m,
-  n1 + n2 <= m ->
+Theorem plus_le : ∀ n1 n2 m,
+  n1 + n2 <= m →
   n1 <= m /\ n2 <= m.
 Proof.
   intros.
@@ -755,7 +749,7 @@ Proof.
 Qed.
 
 Lemma sum_le_m__term_le_m: 
-  forall a b n, a + b <= n -> a <= n.
+  ∀ a b n, a + b <= n → a <= n.
 Proof.
   intros.
   apply n_le_m__m_eq_n_plus_k in H.
@@ -766,8 +760,8 @@ Proof.
 Qed.
 
 Theorem add_le_cases : 
-  forall n m p q, 
-    n + m <= p + q -> n <= p \/ m <= q.
+  ∀ n m p q, 
+    n + m <= p + q → n <= p \/ m <= q.
 Proof.
   intros n.
   induction n.
@@ -793,7 +787,7 @@ Proof.
         apply H.
 Qed.
 
-Theorem plus_le_compat_l : forall n m p,
+Theorem plus_le_compat_l : ∀ n m p,
   n ≤ m → p + n ≤ p + m.
 Proof.
   intros.
@@ -805,7 +799,7 @@ Proof.
     apply IHp.
 Qed.
 
-Theorem plus_le_compat_r : forall n m p,
+Theorem plus_le_compat_r : ∀ n m p,
   n ≤ m → n + p ≤ m + p.
 Proof.
   intros.
@@ -818,7 +812,7 @@ Proof.
     apply IHp.
 Qed.
   
-Theorem le_plus_trans : forall n m p,
+Theorem le_plus_trans : ∀ n m p,
   n ≤ m → n ≤ m + p.
 Proof.
   intros.
@@ -830,7 +824,7 @@ Proof.
     apply IHp.
 Qed.
 
-Theorem n_lt_m__n_le_m : forall n m,
+Theorem n_lt_m__n_le_m : ∀ n m,
   n < m → n ≤ m.
 Proof.
   unfold lt.
@@ -839,7 +833,7 @@ Proof.
   apply H.
 Qed.
   
-Theorem plus_lt : forall n1 n2 m,
+Theorem plus_lt : ∀ n1 n2 m,
   n1 + n2 < m → n1 < m ∧ n2 < m.
 Proof.
   unfold lt.
@@ -872,7 +866,7 @@ Proof.
         apply H0.
 Qed.
 
-Theorem leb_complete : forall n m,
+Theorem leb_complete : ∀ n m,
   n <=? m = true → n ≤ m.
 Proof.
   intros n m.
@@ -891,7 +885,7 @@ Proof.
       apply H.
 Qed.
 
-Theorem leb_correct : forall n m,
+Theorem leb_correct : ∀ n m,
   n ≤ m → n <=? m = true.
 Proof.
   intros.
@@ -908,7 +902,7 @@ Proof.
       apply H.
 Qed.
 
-Theorem leb_iff : forall n m,
+Theorem leb_iff : ∀ n m,
   n <=? m = true ↔ n ≤ m.
 Proof.
   split.
@@ -916,7 +910,7 @@ Proof.
   - apply leb_correct.
 Qed.
 
-Theorem leb_true_trans : forall n m o,
+Theorem leb_true_trans : ∀ n m o,
   n <=? m = true → m <=? o = true → n <=? o = true.
 Proof.
   intros.
@@ -939,7 +933,7 @@ Module R.
     
   Search ((S ?n) = (S ?m)).
   
-  Lemma R_O_N_N: forall n, R 0 n n.
+  Lemma R_O_N_N: ∀ n, R 0 n n.
   Proof.
     induction n.
     * apply c1.
@@ -948,7 +942,7 @@ Module R.
   Qed.
 
   
-  Theorem R_equiv_fR : forall m n o, R m n o ↔ fR m n = o.
+  Theorem R_equiv_fR : ∀ m n o, R m n o ↔ fR m n = o.
   Proof.
     intros.
     split.
@@ -988,56 +982,118 @@ Module R.
 End R.
 
 Inductive subseq : list nat → list nat → Prop :=
-  | ss_r (l : list nat) : subseq l l 
-  | ss_ins (l' l m r : list nat) (E: subseq l' m) : subseq l' (l ++ m ++ r)
-  | ss_inn (l m r l' : list nat) (E: subseq (l ++ m ++ r) l') : subseq m l'.
+  | ss_nil l : subseq [] l
+  | ss_pref s m (E: subseq s m) h p: subseq (h :: s) (p ++ [h] ++ m).
 
-Theorem ss_refl : forall (l : list nat), subseq l l.
+
+Theorem ss_refl: ∀ (l : list nat), subseq l l.
 Proof.
   intros.
-  apply ss_r.
+  induction l.
+  * apply ss_nil.
+  * assert (Q:subseq (a :: l) (a :: l) = subseq (a :: l) ([] ++ [a] ++ l)). {
+      reflexivity.
+    }
+    rewrite Q.
+    apply ss_pref.
+    apply IHl.
+  (* intro l. *)
+  (* assert (Q: subseq l l = subseq (l ++ []) ([] ++ l ++ [])). { *)
+  (*     rewrite! app_nil_r. *)
+  (*     reflexivity. *)
+  (* } *)
+  (* rewrite Q. *)
+  (* apply (ss_pref l [] [] []).  *)
+  (* apply ss_nil. *)
 Qed.
 
-Theorem ss_app : forall (l1 l2 l3 : list nat),
-  subseq l1 l2 → subseq l1 (l2 ++ l3).
+Lemma app_is_nil:
+  ∀ T (l : list T) r, (l ++ r) = [] -> l = [] ∧ r = [].
 Proof.
   intros.
-  rewrite <- app_nil_l.
-  rewrite app_assoc.
-  apply (ss_ins l1 [] l2 l3).
-  apply H.
+  destruct l,r.
+  * split.
+    - reflexivity.
+    - reflexivity.
+  * simpl in H. 
+    discriminate H.
+  * rewrite app_nil_r in H. 
+    discriminate H.
+  * discriminate H.
 Qed.
 
-Search (?l1 ++ ?l2 = []).
-
-Lemma ss_nil : forall l1, subseq (l1) [] -> (l1) = [].
+Lemma ss_of_nil : 
+  ∀ l1, subseq (l1) [] → (l1) = [].
 Proof.
-  intros l1 l2.
+  intros.
   remember [] as e.
-  induction l2.
-  * reflexivity.
-  * apply app_eq_nil in Heqe as E.
-    destruct E.
-    apply app_eq_nil in H0 as E.
-    destruct E.
-    apply IHl2 in H1 as R.
-    rewrite R.
-    rewrite H2.
-    rewrite H.
-    rewrite app_nil_r.
+  induction H.
+  * rewrite Heqe. 
     reflexivity.
-  * apply IHl2 in Heqe as R.
-    rewrite Heqe in R.
-    apply app_eq_nil in R.
-    destruct R.
-    apply app_eq_nil in H0.
-    destruct H0.
-    rewrite H0.
-    rewrite Heqe.
-    reflexivity.
+  * apply app_is_nil in Heqe.
+    destruct Heqe as [Hp Hhm].
+    apply app_is_nil in Hhm.
+    destruct Hhm as [Hh Hm].
+    discriminate Hh.
+  (* intros. *)
+  (* remember [] as e. *)
+  (* induction H. *)
+  (* * reflexivity. *)
+  (* * apply app_is_nil in Heqe. *)
+  (*   destruct Heqe as [Hp Hslmr]. *)
+  (*   apply app_is_nil in Hslmr. *)
+  (*   destruct Hslmr as [Hsl Hmr]. *)
+  (*   apply IHsubseq in Hmr as E. *)
+  (*   rewrite E. *)
+  (*   rewrite Hsl. *)
+  (*   rewrite Hp. *)
+  (*   reflexivity. *)
 Qed.
 
-Theorem ss_trans : forall (l1 l2 l3 : list nat),
+Lemma cons_is_app : forall X (a : X) l, a :: l = [a] ++ l.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+Theorem ss_l_app: 
+  ∀ l m, subseq l m -> ∀ p, subseq l (p ++ m).
+Proof.
+  intros l m.
+  intro H.
+  induction H.
+  * intros.
+    apply ss_nil.
+  * intros.
+    rewrite app_assoc.
+    specialize IHsubseq with [].
+    apply (ss_pref s m IHsubseq h (p0 ++ p)).
+Qed.
+
+Lemma ss_cons_l:
+  ∀ p s m, subseq (p :: s) m -> subseq s m.
+Proof.
+  intros.
+  inversion H.
+  rewrite app_assoc.
+  apply ss_l_app.
+  apply E.
+Qed.
+   
+Theorem ss_app_l: 
+  ∀ p s m, subseq (p ++ s) m -> subseq s m.
+Proof.
+  intros.
+  induction p.
+  * simpl in H. 
+    apply H.
+  * simpl in H.
+    apply ss_cons_l in H.
+    apply IHp in H.
+    apply H.
+Qed.
+
+Theorem ss_trans : ∀ (l1 l2 l3 : list nat),
   subseq l1 l2 →
   subseq l2 l3 →
   subseq l1 l3.
@@ -1046,15 +1102,14 @@ Proof.
   generalize dependent l3.
   induction H.
   * intros.
-    apply H.
+    apply ss_nil.
   * intros.
+    apply ss_app_l in H0 as H'.
+    simpl in H'.
+    inversion H'.
+    apply ss_pref.
     apply IHsubseq.
-    apply ss_inn in H0.
-    apply H0.
-  * intros.
-    apply IHsubseq in H0.
-    apply ss_inn in H0.
-    apply H0.
+    apply E.
 Qed.
 
 Inductive reg_exp (T : Type) : Type :=
@@ -1128,7 +1183,7 @@ Proof.
 Qed.
 
 Lemma MStar1 :
-  forall T s (re : reg_exp T) ,
+  ∀ T s (re : reg_exp T) ,
     s =~ re →
     s =~ Star re.
 Proof.
@@ -1141,7 +1196,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma empty_is_empty : forall T (s : list T),
+Lemma empty_is_empty : ∀ T (s : list T),
   ¬ (s =~ EmptySet).
 Proof.
   intros.
@@ -1149,7 +1204,7 @@ Proof.
   inversion H.
 Qed.
 
-Lemma MUnion' : forall T (s : list T) (re1 re2 : reg_exp T),
+Lemma MUnion' : ∀ T (s : list T) (re1 re2 : reg_exp T),
   s =~ re1 ∨ s =~ re2 →
   s =~ Union re1 re2.
 Proof.
@@ -1166,8 +1221,8 @@ Fixpoint fold {X Y: Type} (f : X→Y→Y) (l : list X) (b : Y)
   | h :: t => f h (fold f t b)
   end.
 
-Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp T),
-  (forall s, In s ss → s =~ re) →
+Lemma MStar' : ∀ T (ss : list (list T)) (re : reg_exp T),
+  (∀ s, In s ss → s =~ re) →
   fold (@app T) ss [] =~ Star re.
 Proof.
   intros.
@@ -1198,7 +1253,7 @@ Fixpoint re_chars {T} (re : reg_exp T) : list T :=
   | Star re => re_chars re
   end.
 
-Theorem in_re_match : forall T (s : list T) (re : reg_exp T) (x : T),
+Theorem in_re_match : ∀ T (s : list T) (re : reg_exp T) (x : T),
   s =~ re →
   In x s →
   In x (re_chars re).
@@ -1268,8 +1323,8 @@ Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
   | Star r => true
   end.
 
-Lemma re_not_empty_forward : forall T (re : reg_exp T),
-  (exists s, s =~ re) -> re_not_empty re = true.
+Lemma re_not_empty_forward : ∀ T (re : reg_exp T),
+  (exists s, s =~ re) → re_not_empty re = true.
 Proof.
   intros.
   destruct H as [s H].
@@ -1290,7 +1345,7 @@ Proof.
   * reflexivity.
 Qed.
 
-Lemma orb_prop : forall b1 b2, (orb b1 b2) = true -> b1 = true \/ b2 = true.
+Lemma orb_prop : ∀ b1 b2, (orb b1 b2) = true → b1 = true \/ b2 = true.
 Proof.
   intros.
   destruct b1,b2.
@@ -1300,8 +1355,8 @@ Proof.
   * discriminate H.
 Qed.
 
-Lemma re_not_empty_backward : forall T (re : reg_exp T),
-  re_not_empty re = true -> (exists s, s =~ re).
+Lemma re_not_empty_backward : ∀ T (re : reg_exp T),
+  re_not_empty re = true → (exists s, s =~ re).
 Proof.
   intros.
   induction re.
@@ -1337,7 +1392,7 @@ Proof.
     apply MStar0.
 Qed.
       
-Lemma re_not_empty_correct : forall T (re : reg_exp T),
+Lemma re_not_empty_correct : ∀ T (re : reg_exp T),
   (exists s, s =~ re) ↔ re_not_empty re = true.
 Proof.
   intros.
@@ -1500,7 +1555,7 @@ Module Pumping.
   
   Lemma star_star__app_star : 
     ∀ T s1 s2 (re : reg_exp T),
-      s1 =~ Star re -> s2 =~ Star re → (s1 ++ s2) =~ Star re.
+      s1 =~ Star re → s2 =~ Star re → (s1 ++ s2) =~ Star re.
   Proof.
     intros.
     remember (Star re) as r'.
@@ -1657,13 +1712,13 @@ Module Pumping.
   Qed.
   
   Lemma add_le_cases_smarter:
-    forall a b c d, (a + b) <= (c + d) -> 
+    ∀ a b c d, (a + b) <= (c + d) → 
       (a <= c) \/ (a > c /\ b <= d).
   Proof.
     intros.
     unfold gt,lt.
     apply Nat.add_le_cases in H.
-    assert (R:(a ≤ c) ∨ (b ≤ d) -> (a <=? c = true) \/ (b <=? d = true)). {
+    assert (R:(a ≤ c) ∨ (b ≤ d) → (a <=? c = true) \/ (b <=? d = true)). {
       intros.
       destruct H.
       - apply leb_correct in H.
@@ -1690,7 +1745,7 @@ Module Pumping.
   Qed.
   
   Lemma re_matcher_then_star_matches:
-    forall T (s : list T) re, s =~ re -> s =~ (Star re).
+    ∀ T (s : list T) re, s =~ re → s =~ (Star re).
   Proof.
     intros.
     rewrite <- (app_nil_r s).
@@ -1910,7 +1965,7 @@ Inductive merge {X:Type} : list X → list X → list X → Prop :=
   .
 
 Lemma merge_pref_l: 
-  ∀ T (l': list T) l r m, merge l r m -> merge (l' ++ l) r (l' ++ m).
+  ∀ T (l': list T) l r m, merge l r m → merge (l' ++ l) r (l' ++ m).
 Proof.
   intros.
   replace r with ([] ++ r). {
@@ -1924,7 +1979,7 @@ Proof.
 Qed.
 
 Lemma merge_pref_r:
-  ∀ T l (r': list T) r m, merge l r m -> merge l (r' ++ r) (r' ++ m).
+  ∀ T l (r': list T) r m, merge l r m → merge l (r' ++ r) (r' ++ m).
 Proof.
   intros.
   replace l with ([] ++ l). {
@@ -1938,7 +1993,7 @@ Proof.
 Qed.
     
 Lemma merge_symm: 
-  ∀ T (l : list T) r m, merge l r m -> merge r l m.
+  ∀ T (l : list T) r m, merge l r m → merge r l m.
 Proof.
   intros.
   induction H.
@@ -1990,19 +2045,62 @@ Proof.
   reflexivity.
 Qed.
 
-Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
+Fixpoint All {T : Type} (P : T → Prop) (l : list T) : Prop :=
   match l with
   | nil => True
   | h :: t => P h ∧ All P t
   end.
 
-Lemma All_distr: ∀ (X: Type) (test : X -> Prop) l1 l2,
-  All test (l1 ++ l2) -> All test l1 ∧ All test l2.
+Lemma All_distr: ∀ (X: Type) (test : X → Prop) l1 l2,
+  All test (l1 ++ l2) → All test l1 ∧ All test l2.
+Proof.
+  intros X test l1.
+  induction l1.
+  * intros.
+    simpl in *.
+    split.
+    - apply I.
+    - apply H.
+  * simpl in *.
+    intros.
+    destruct H as [HL HR].  
+    apply IHl1 in HR.
+    destruct HR as [Hl1 Hl2].
+    split.
+    - split.
+      + apply HL.
+      + apply Hl1.
+    - apply Hl2.
+Qed.
+
+
+Lemma filter_with_all_true : 
+  ∀ X l test, All (λ n : X, ((test n) = true)) l → filter test l = l.
 Proof.
   intros.
-  
+  induction l.
+  * reflexivity.
+  * simpl in *.
+    destruct H as [Ha Hl].
+    apply IHl in Hl.
+    rewrite Ha.
+    rewrite Hl.
+    reflexivity.
+Qed.
 
 
+Lemma filter_with_all_false : 
+  ∀ X l test, All (λ n : X, ((test n) = false)) l → filter test l = [].
+Proof.
+  intros.
+  induction l.
+  * reflexivity.
+  * simpl in *.
+    destruct H as [Ha Hl]. 
+    apply IHl in Hl.
+    rewrite Ha.
+    apply Hl.
+Qed.
 
 Theorem merge_filter : ∀ (X : Set) (test: X → bool) (l l1 l2 : list X),
   merge l1 l2 l →
@@ -2013,8 +2111,77 @@ Proof.
   intros X test l l1 l2 HMerge HL1 HL2.
   induction HMerge.
   * reflexivity.
-  * 
+  * apply All_distr in HL1.
+    apply All_distr in HL2.
+    destruct HL1 as [Hl Hl'].
+    destruct HL2 as [Hr Hr'].
+    apply IHHMerge in Hl'.
+    - rewrite! filter_app.
+      rewrite Hl'.
+      apply filter_with_all_false in Hr.
+      rewrite Hr.
+      apply filter_with_all_true in Hl.
+      rewrite Hl.
+      reflexivity.
+    - apply Hr'.
+Qed.
 
+Fixpoint check_subseq (l' : list nat) (l : list nat) : bool :=
+  match (l', l) with
+  | ([], _) => true
+  | (h :: t, []) => false
+  | (h' :: t', h :: t) => 
+    if h' =? h 
+        then check_subseq t' t 
+        else false 
+  end.
+  
+Lemma check_subseq_nil:
+  ∀ l, (check_subseq l [] = true) → l = [].
+Proof.
+  intros.
+  destruct l.
+  * reflexivity.
+  * simpl in H.
+    discriminate.
+Qed.
 
+Lemma a_le_b__a_le_b_plus_c:
+  ∀a b, a ≤ b → ∀ c, a ≤ b + c.
+Proof.
+  intros.
+  induction c.
+  * rewrite Nat.add_0_r. 
+    apply H.
+  * rewrite Nat.add_succ_r.
+    apply le_S.
+    apply IHc.
+Qed.
 
-
+Theorem filter_challenge_2:
+  ∀ l l' (H : subseq l' l) test (H': All (λ n, test n = true) l'), 
+    length l' <= length (filter test l).
+Proof.
+  intros l l' Hsub.
+  intro test.
+  induction Hsub.
+  * intros.
+    simpl.
+    apply O_le_n.
+  * intros.
+    simpl in H'.
+    destruct H' as [Hh HA].
+    apply IHHsub in HA.
+    simpl.
+    rewrite cons_is_app.
+    rewrite! filter_app.
+    simpl.
+    rewrite Hh.
+    rewrite! length_app.
+    simpl.
+    rewrite Nat.add_succ_r.
+    apply n_le_m__Sn_le_Sm.
+    rewrite Nat.add_comm.
+    apply a_le_b__a_le_b_plus_c.
+    apply HA.
+Qed.
