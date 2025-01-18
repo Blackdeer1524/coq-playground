@@ -2256,20 +2256,64 @@ Fixpoint drop_tail (X : Type) (l : list X) : option (list X * X) :=
               end
   end.
 
+Lemma drop_tail_add_cons:
+  ∀ X (a : X) l l' t x, 
+    (drop_tail X (a :: l)) = (Some (l', t)) →
+      (drop_tail X (x :: a :: l)) = Some (x :: l', t).
+Proof.
+  intros.
+  simpl in *.
+  rewrite H.
+  reflexivity.
+Qed.
 
-Lemma asfdfasfda:
+Lemma drop_tail_on_non_nil:
+  ∀ X (l : list X), length l >= 1 -> ∃l' t, drop_tail X l = Some (l',t).
+Proof.
+  intros.
+  destruct l.
+  * inversion H.
+  * generalize dependent x. 
+    induction l.
+    - exists [], x.
+      reflexivity.
+    - assert (Q: forall x, (length (x :: l)) >= 1). {
+        intro. 
+        simpl.
+        apply n_le_m__Sn_le_Sm.
+        apply O_le_n.
+      }
+      apply (IHl a) in Q.
+      destruct Q as [l' [t H']].
+      intros.
+      apply (drop_tail_add_cons X a l l' t x) in H'.
+      exists (x::l'),t.
+      apply H'.
+Qed.
+
+Lemma destruct_list_tail:
   ∀ X (l : list X), (l = []) ∨ (∃l' a, l = l' ++ [a]).
 Proof.
   intros.
   destruct l.
-  * left. reflexivity.
+  * left. 
+    reflexivity.
   * right.
-
-  
-
-
+    generalize dependent x.
+    induction l.
+    - intro.
+      exists [], x.
+      reflexivity.
+    - intros.
+      specialize IHl with a.
+      destruct IHl as [l' [a' H]].
+      rewrite H.
+      exists (x::l'), a'.
+      reflexivity.
+Qed.
+      
 Lemma list_len_2_plus: 
-  ∀ X (l : list X), 2 <= length l -> ∃a b l', l = [a] ++ l' ++ [b].
+  ∀ X (l : list X), length l >= 2 -> ∃a b l', l = [a] ++ l' ++ [b].
 Proof.
   intros.
   destruct l.
@@ -2277,20 +2321,28 @@ Proof.
   * destruct l.
     - inversion H.
       inversion H1.
-    - 
+    - destruct (destruct_list_tail X (x0 :: l)) as [HE | HT].
+      + discriminate HE.
+      + destruct HT as [l' [a HT]].
+        rewrite HT.
+        exists x,a,l'.
+        reflexivity.
+Qed.
 
+Lemma asdfas:
+  ∀ X (h : X) t a b, [h] ++ a ++ [t] = [t] ++ b ++ [h] -> h = t.
+Proof.
+  intros.
+  injection H.
+  intros.
+  apply H1.
+Qed.
 
-
-
-  
-
-
-
-
-Theorem adsfasfas:
-  ∀ X l, l = rev l -> (l = []) 
-                    ∨ (∃a, l = [a]) 
-                    ∨ (∃ (a : X) l', (l = [a] ++ l' ++ [a])).
+Theorem l_eq_rev_l:
+  ∀ X l, l = rev l -> 
+    (l = []) 
+  ∨ (∃a, l = [a]) 
+  ∨ (∃ (a : X) l', (l = [a] ++ l' ++ [a]) ∧ l' = rev l').
 Proof.
   intros X l H.
   destruct (length l) eqn:E.
@@ -2306,21 +2358,50 @@ Proof.
       apply E.
     - right. 
       right.
-      
-
-    
-
-
-
-  
+      assert (Q: length l >= 2). {
+        rewrite E.
+        apply n_le_m__Sn_le_Sm.
+        apply n_le_m__Sn_le_Sm.
+        apply O_le_n.
+      }
+      apply list_len_2_plus in Q.
+      destruct Q as [h [t [l' Hl]]].
+      exists h,l'.
+      rewrite Hl in H.
+      simpl in H.
+      rewrite rev_app_distr in H.
+      simpl in H.
+      injection H.
+      intros.
+      rewrite <- H1 in Hl.
+      rewrite H1 in H0.
+      apply app_inv_tail in H0.
+      split.
+      + apply Hl.
+      + apply H0.
+Qed.
 
 Theorem palindrome_converse: ∀ {X: Type} (l: list X),
   l = rev l → pal l.
 Proof.
   intros.
-  induction l.
-  * 
-  * simpl in H.
+  apply l_eq_rev_l in H as E.
+  destruct E as [E | [E | E]].
+  * rewrite E. 
+    apply pal_e.
+  * destruct E as [a E].
+    rewrite E.
+    apply pal_s.
+  * destruct E as [a [l' [HL E]]].
+    
+
+    
+    
+    
+
+    
+
+    
 
     
   
