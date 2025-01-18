@@ -2185,3 +2185,144 @@ Proof.
     apply a_le_b__a_le_b_plus_c.
     apply HA.
 Qed.
+
+Inductive pal {X: Type} : list X -> Prop :=
+  | pal_e : pal []
+  | pal_s (x : X) : pal [x]
+  | pal_m (x : X) q (P : pal q) : pal ([x] ++ q ++ [x]).
+  
+Theorem pal_app_rev : ∀ (X:Type) (l : list X),
+  pal (l ++ (rev l)).
+Proof.
+  intros X l.
+  induction l.
+  * simpl.
+    apply pal_e.
+  * simpl.
+    rewrite cons_is_app.
+    assert (Q: [a] ++ (l ++ ((rev l) ++ [a])) = [a] ++ (l ++ (rev l)) ++ [a]). {
+      rewrite! app_assoc.
+      reflexivity.
+    }
+    rewrite Q.
+    apply pal_m.
+    apply IHl.
+Qed.
+
+Theorem pal_rev : ∀ (X:Type) (l: list X) , pal l → l = rev l.
+Proof.
+  intros.
+  induction H.
+  * reflexivity.
+  * reflexivity.
+  * simpl.
+    rewrite rev_app_distr.
+    simpl.
+    rewrite <- IHpal.
+    reflexivity.
+Qed.
+
+Lemma nil_len : ∀ X (l : list X), length l = 0 -> l = [].
+Proof.
+  destruct l.
+  * intros.
+    reflexivity.
+  * intro.
+    simpl in H.
+    discriminate H.
+Qed.
+
+Lemma S_len : 
+  ∀ X (l : list X), length l = 1 -> ∃a, l = [a].
+Proof.
+  intros.
+  destruct l.
+  * discriminate H.
+  * simpl in H.
+    injection H.
+    intros.
+    apply nil_len in H0.
+    rewrite H0.
+    exists x.
+    reflexivity.
+Qed.
+
+Fixpoint drop_tail (X : Type) (l : list X) : option (list X * X) :=
+  match l with
+  | nil => None
+  | h :: t => match drop_tail X t with
+              | None => Some ([],h)
+              | Some (r,q) => Some (h::r,q)
+              end
+  end.
+
+
+Lemma asfdfasfda:
+  ∀ X (l : list X), (l = []) ∨ (∃l' a, l = l' ++ [a]).
+Proof.
+  intros.
+  destruct l.
+  * left. reflexivity.
+  * right.
+
+  
+
+
+Lemma list_len_2_plus: 
+  ∀ X (l : list X), 2 <= length l -> ∃a b l', l = [a] ++ l' ++ [b].
+Proof.
+  intros.
+  destruct l.
+  * inversion H.
+  * destruct l.
+    - inversion H.
+      inversion H1.
+    - 
+
+
+
+
+  
+
+
+
+
+Theorem adsfasfas:
+  ∀ X l, l = rev l -> (l = []) 
+                    ∨ (∃a, l = [a]) 
+                    ∨ (∃ (a : X) l', (l = [a] ++ l' ++ [a])).
+Proof.
+  intros X l H.
+  destruct (length l) eqn:E.
+  * apply nil_len in E.
+    left.
+    apply E.
+  * destruct n.
+    - apply S_len in E.
+      destruct E as [a E].
+      right.
+      left.
+      exists a.
+      apply E.
+    - right. 
+      right.
+      
+
+    
+
+
+
+  
+
+Theorem palindrome_converse: ∀ {X: Type} (l: list X),
+  l = rev l → pal l.
+Proof.
+  intros.
+  induction l.
+  * 
+  * simpl in H.
+
+    
+  
+
+  
